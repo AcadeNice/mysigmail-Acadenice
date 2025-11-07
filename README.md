@@ -10,53 +10,52 @@
   <img src=".github/hero.png" width="500" alt="MySigMail - Email Signature Generator" />
 </p>
 
-<h1 align="center">MySigMail</h1>
+<h1 align="center">MySigMail – Fork Acadénice</h1>
 <p align="center">
-  <strong>An open-source email signature generator for Gmail, Outlook, Apple Mail, etc.</strong>
+  <strong>Générateur de signatures e-mail open source (Gmail, Outlook, Apple Mail, etc.).</strong>
   <br>
-  Build a sleek, professional-looking signature that enhances your brand.
+  Adaptation francophone avec déploiement Docker et intégration Traefik.
 </p>
 
 <p align="center">
   <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/antonreshetov/mysigmail">
-  <img alt="GitHub" src="https://img.shields.io/github/license/antonreshetov/mysigmail">
+  <img alt="Licence AGPL" src="https://img.shields.io/github/license/antonreshetov/mysigmail">
 </p>
 
-<p align="center" >
-  <a href="https://www.producthunt.com/posts/mysigmail-2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=142330&theme=dark&period=daily" alt="MySigMail - UI email signature generator on GitHub | Product Hunt Embed" style="width: 200px;" /></a>
-</p>
+## 🔁 Projet d’origine
 
-## About
-Creating an email signature is not a trivial task, especially for non-technical people.
-Most existing solutions are either paid or closed-source.
+Ce dépôt est un fork du projet open source **[MySigMail](https://github.com/antonreshetov/mysigmail)** créé par [Anton Reshetov](https://github.com/antonreshetov) ([AGPL-3.0](https://github.com/antonreshetov/mysigmail/blob/master/LICENSE)).
 
-**MySigMail** makes it easy, free, and open-source.
-Let’s make creating professional signatures accessible for everyone!
+Ce fork ajoute :
+- une documentation en français ;
+- un exemple de déploiement Docker/Traefik ;
+- quelques ajustements pour stabiliser le build dans un contexte container.
 
-## Features
-- **Customization** – fonts, colors, avatar shapes, social icons, custom fields
-- **Templates** – ready-to-use layouts for quick start
-- **Add-ons** – disclaimer, call-to-action, and more
+## ✨ Fonctionnalités principales
 
-## Development
+- **Personnalisation** : polices, couleurs, forme de l’avatar, champs personnalisés.
+- **Templates prêts à l’emploi** : plusieurs mises en page pour démarrer en quelques clics.
+- **Add-ons** : bannière, disclaimer, liens CTA, réseaux sociaux, etc.
+- **Sauvegarde locale** : conservation des signatures dans le navigateur.
 
-### Prerequisites
+## 🛠️ Prérequis
 
-The project uses Bun for building and running. Please make sure you have [Bun](https://bun.sh/) installed.
+### Utilisation locale (Bun)
 
-### Quick Start
+Si vous souhaitez développer ou tester via Bun :
 
 ```bash
-git clone https://github.com/antonreshetov/mysigmail
-cd mysigmail
+git clone https://github.com/<votre-compte>/mysigmail-Acadenice
+cd mysigmail-Acadenice
 bun install
 bun run dev
 ```
 
-### Set env variables
-If you want to test image upload functionality, you need to set AWS S3 credentials.
+> Bun est nécessaire pour la commande `bun run build`. Installez-le via [bun.sh](https://bun.sh/).
 
-Create a `.env` file in the root directory and add the following variables:
+### Variables d’environnement (optionnel)
+
+Pour tester l’upload d’images (S3), créez un fichier `.env` à la racine :
 
 ```bash
 VITE_AWS_S3_URL=
@@ -66,39 +65,63 @@ VITE_AWS_S3_KEY=
 VITE_AWS_S3_REGION=
 ```
 
-## SaaS Version
-Don’t want to deal with setup and running locally?
+## 🐳 Déploiement Docker (avec Traefik)
 
-Use the **[MySigMail](https://mysigmail.com)** – a production-ready version of app, hosted and packed with extra features.
+### 1. Vérifier le réseau exposé à Traefik
 
-### Key Features
-- **Manage multiple signatures** – create, save, and switch between multiple signatures effortlessly, all stored safely on our servers
-- **Shared signatures** – share ready-to-use signatures that your teammates can copy and install
-- **Analytics** – track clicks and engagement from your email signature
-- **Presets library** – professionally designed signature styles you can apply in one click
-- **Image hosting** – reliable CDN hosting for logos, banners, and photos
+Identifiez le réseau Docker déjà joint à votre instance Traefik :
 
-### Tools
-Extend your signatures with powerful marketing and branding tools:
+```bash
+docker network ls
+```
 
-- **Sign Off** – create a handwritten signature and add it as a personal sign-off to your email signature
-- **URL Builder** – generate UTM-tagged URLs and seamlessly track your campaigns in Google Analytics
-- **Banner Maker** *(coming soon)* – design and add eye-catching banners to promote events, offers, or announcements directly in your email signature
+Notez son nom puis réutilisez-le dans le fichier de composition. Si aucun réseau dédié n’existe, créez-en un (sur l’hôte où tourne Traefik) et rattachez-y Traefik.
 
-Check out **[MySigMail](https://mysigmail.com)** and start creating professional email signatures in seconds.
+### 2. Préparer le fichier Compose
 
-## Follow
- - News and updates on [X](https://x.com/mysigmail).
- - [Discussions](https://github.com/antonreshetov/mysigmail/discussions).
+Le fichier `docker-compose.yml` réel est ignoré par Git. Copiez l’exemple fourni :
 
-## License
+```bash
+cp docker-compose.example.yml docker-compose.yml
+```
 
-This project is licensed under the [AGPL-3.0](https://github.com/antonreshetov/mysigmail/blob/master/LICENSE) for non-commercial use.
+Adaptez ensuite :
+- le domaine dans `traefik.http.routers.mysigmail.rule` ;
+- le nom du réseau dans `traefik.docker.network` et dans la section `networks` ;
+- toute variable ou volume spécifique à votre environnement.
 
-## Commercial Use
+### 3. Construire et lancer l’application
 
-For commercial use, please contact me for a commercial license at reshetov.art@gmail.com.
+```bash
+docker compose up -d --build
+```
 
-By using this software, you agree to the terms of the license.
+Traefik détecte le service grâce aux labels. Vérifiez le routage (dashboard Traefik, `curl https://votre-domaine`) et la génération du certificat TLS.
 
-Copyright (c) 2019-present, [Anton Reshetov](https://github.com/antonreshetov).
+### 4. Ajustements facultatifs
+
+- Ajoutez un enregistrement DNS (CNAME ou A) vers votre reverse proxy.
+- Si vous utilisez l’upload S3, exportez vos variables dans `.env`.
+- Le `Dockerfile` multi-étapes compile l’app avec Bun puis sert le dossier `dist` via Apache.
+
+## 🤝 Contributions
+
+Les contributions sur ce fork sont bienvenues. Merci de conserver :
+- la mention du projet original ;
+- la licence AGPL-3.0 sur toute redistribution.
+
+## 📬 Ressources
+
+- Discussions et mises à jour : [dépôt amont](https://github.com/antonreshetov/mysigmail).
+- Version SaaS officielle : [mysigmail.com](https://mysigmail.com).
+- Compte X : [@mysigmail](https://x.com/mysigmail).
+
+## 📄 Licence
+
+Projet sous licence [AGPL-3.0](https://github.com/antonreshetov/mysigmail/blob/master/LICENSE). Toute modification ou redistribution doit conserver cette licence et créditer l’auteur initial.
+
+---
+
+Copyright (c) 2019-présent, [Anton Reshetov](https://github.com/antonreshetov).
+
+Adaptations francophones et guide Docker : [Acadénice](https://github.com/acadenice).
