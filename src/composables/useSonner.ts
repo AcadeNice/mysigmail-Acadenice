@@ -1,3 +1,4 @@
+import { markRaw } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { Props } from '@/components/ui/sonner/types'

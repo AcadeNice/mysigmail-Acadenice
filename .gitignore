@@ -9,8 +9,6 @@ node_modules
 dist
 dist-ssr
 *.local
-auto-imports.d.ts
-components.d.ts
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +25,4 @@ components.d.ts
 .env
 .env.*
 !.env.example
+docker-compose.yml

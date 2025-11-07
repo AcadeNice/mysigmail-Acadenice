@@ -136,6 +136,11 @@ export interface SocialTool {
   value: string
 }
 
+export interface AnalyticsItem {
+  name: string
+  value: string
+}
+
 export interface Signature {
   label: string
   name: string

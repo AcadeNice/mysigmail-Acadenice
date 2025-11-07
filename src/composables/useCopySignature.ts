@@ -1,3 +1,5 @@
+import { useSonner } from '@/composables/useSonner'
+
 const { sonner } = useSonner()
 
 const html = ref('')
