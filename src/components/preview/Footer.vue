@@ -5,8 +5,8 @@ const year = new Date().getFullYear()
 
 const links = computed(() => {
   return [
-    { name: 'SaaS version', href: 'https://mysigmail.com' },
-    { name: 'GitHub', href: 'https://github.com/antonreshetov/mysigmail' },
+    { name: 'Acadenice', href: 'https://acadenice.fr/' },
+    { name: 'GitHub', href: 'https://github.com/AcadeNice/mysigmail-Acadenice' },
   ]
 })
 </script>
@@ -35,7 +35,7 @@ const links = computed(() => {
         </UiButton>
       </span>
     </div>
-    <div>©{{ year }} • Anton Reshetov</div>
+    <div>©{{ year }} • Acadenice</div>
     <div>v{{ version }}</div>
   </div>
 </template>

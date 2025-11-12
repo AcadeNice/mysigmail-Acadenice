@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
-    path: '/basic',
+    path: '/',
+    alias: ['/basic'],
     component: () => import('@/views/Basic.vue'),
     meta: {
       title: 'Basic signature details',
@@ -38,7 +39,7 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/basic',
+    redirect: '/',
   },
 ]
 
