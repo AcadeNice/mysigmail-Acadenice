@@ -23,8 +23,7 @@ const firstFiled = ref()
 useFocus(firstFiled, { initialValue: true })
 
 function onAddField() {
-  if (!installed.value)
-    return
+  if (!installed.value) return
   installed.value.tools.basic.push(clone(field.value))
   open.value = false
   reset()

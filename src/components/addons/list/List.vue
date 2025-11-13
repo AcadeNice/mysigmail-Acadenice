@@ -6,7 +6,7 @@ import { addons as addonsData } from '@/data/addons'
 const { addons } = useSignatures()
 
 const addonsList = computed(() => {
-  return addonsData.filter(addon => !addons.value.find(a => a.type === addon.type))
+  return addonsData.filter((addon) => !addons.value.find((a) => a.type === addon.type))
 })
 
 function addAddon(addon: AddonTool) {

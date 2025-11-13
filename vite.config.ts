@@ -27,19 +27,19 @@ export default defineConfig({
           names: ['RouterLink', 'RouterView'],
         },
       ],
-      resolvers: [
-        IconsResolver({
-          prefix: false,
-        }),
-      ],
+      resolvers: [IconsResolver({ prefix: false })],
     }),
-    Icons({
-      compiler: 'vue3',
-    }),
+    Icons({ compiler: 'vue3' }),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:3001', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },
 })

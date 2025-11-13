@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
+import type { AnchorHTMLAttributes, HTMLAttributes } from 'vue'
+
+import { computed, defineProps, withDefaults } from 'vue'
 
 import type { BasicTool } from '@/composables/signatures/types'
 
@@ -15,18 +17,29 @@ interface Props {
   display?: string
   showLabel?: boolean
   separator?: string
-  font?: object
+  font?: Record<string, any>
   labelColor?: string
   textColor?: string
+  analyticTag?: string
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   type: 'td',
   display: 'block',
   showLabel: true,
-  // если установить чисто черный то некоторые клиенты
-  // перекрашивают в дефолтный для ссылок
   textColor: '#010101',
+})
+
+/** Always return an object; never undefined */
+const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
+  // if getAnchorAttrs can return undefined, coerce to {}
+  const base = (getAnchorAttrs(props.model, props.textColor) ?? {}) as AnchorHTMLAttributes
+
+  // conditionally add analytics attribute
+  return {
+    ...base,
+    ...(props.enableAnalytics && props.analyticTag ? { 'data-analytic': props.analyticTag } : {}),
+  }
 })
 </script>
 
@@ -47,19 +60,19 @@ withDefaults(defineProps<Props>(), {
           v-bind="$attrs"
           :style="{ color: labelColor }"
         >{{ model.label }}:&nbsp;&nbsp;</span>
+
         <Base.Link
           v-if="model.type !== 'text'"
-          v-bind="getAnchorAttrs(model, textColor, enableAnalytics, analyticTag)"
+          v-bind="anchorAttrs"
         >
           {{ model.value }}
         </Base.Link>
+
         <span
-          v-if="model.type === 'text'"
+          v-else
           :style="{ color: textColor }"
           v-bind="$attrs"
-        >{{
-          model.value
-        }}</span>
+        >{{ model.value }}</span>
       </p>
     </td>
   </tr>

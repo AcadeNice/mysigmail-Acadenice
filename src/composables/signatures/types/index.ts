@@ -3,6 +3,7 @@ export interface AddonBanner {
   link: string
   width?: number
 }
+
 export interface AddonLogo {
   image: string
   link: string
@@ -28,7 +29,11 @@ export interface AddonCTA {
   image?: string
   width?: number
 }
-
+export interface AddonTrackingPixel {
+  url: string
+  enabled: boolean
+  recipient?: string
+}
 export type AddonValue
   = | string
     | AddonBanner
@@ -36,6 +41,7 @@ export type AddonValue
     | AddonVideoConference
     | AddonCTA
     | AddonLogo
+    | AddonTrackingPixel
 
 export type Addon
   = | 'banner'
@@ -45,6 +51,7 @@ export type Addon
     | 'mobileApp'
     | 'cta'
     | 'logo'
+    | 'trackingPixel'
 
 export type Basic = 'text' | 'link' | 'email' | 'phone' | 'image'
 export type AvatarShape = 'square' | 'round' | 'rounded-corner'

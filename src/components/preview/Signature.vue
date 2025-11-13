@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+
 import Template1 from '@/components/templates/Template1.vue'
 import Template2 from '@/components/templates/Template2.vue'
 import Template3 from '@/components/templates/Template3.vue'
@@ -8,7 +10,8 @@ import Template6 from '@/components/templates/Template6.vue'
 import Template7 from '@/components/templates/Template7.vue'
 import Template8 from '@/components/templates/Template8.vue'
 import Template9 from '@/components/templates/Template9.vue'
-// import { useCopySignature } from '@/composables/useCopySignature'
+import { useSignatures } from '@/composables/signatures/useSignatures'
+import { useCopySignature } from '@/composables/useCopySignature'
 
 const { getHtml } = useCopySignature()
 const { installed } = useSignatures()

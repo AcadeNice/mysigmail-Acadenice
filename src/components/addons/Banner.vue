@@ -1,58 +1,74 @@
 <script setup lang="ts">
-import type { AddonBanner } from '@/composables/signatures/types'
+import { computed } from 'vue'
 
-const { getAddonValue, patchAddonValue } = useSignatures()
+import { useSignatures } from '@/composables/signatures/useSignatures'
 
-const image = computed({
-  get: () => getAddonValue<AddonBanner>('banner').image,
+const { getBannerEffective, patchBannerEffective } = useSignatures()
+
+const isHttp = (v: string) => /^https?:\/\/\S+/i.test(v.trim())
+
+const image = computed<string>({
+  get: () => getBannerEffective().image,
   set: (value) => {
-    patchAddonValue<AddonBanner>('banner', 'image', value)
+    const raw = (value ?? '').trim()
+    const next = !raw ? '' : isHttp(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`
+    patchBannerEffective('image', next)
   },
 })
 
-const link = computed({
-  get: () => getAddonValue<AddonBanner>('banner').link,
-  set: (value) => {
-    patchAddonValue<AddonBanner>('banner', 'link', value)
+const link = computed<string>({
+  get: () => getBannerEffective().link,
+  set: (v) => patchBannerEffective('link', (v ?? '').trim()),
+})
+
+const widthPct = computed<number>({
+  get: () => getBannerEffective().width ?? 100,
+  set: (val) => {
+    const v = Math.max(10, Math.min(100, Math.round(val ?? 100)))
+    patchBannerEffective('width', v)
   },
 })
 
-const width = computed({
-  get: () => [getAddonValue<AddonBanner>('banner').width ?? 100],
-  set: (value) => {
-    patchAddonValue<AddonBanner>('banner', 'width', value[0])
-  },
+const widthArr = computed<number[]>({
+  get: () => [widthPct.value],
+  set: (arr) => (widthPct.value = Array.isArray(arr) ? arr[0] : 100),
 })
-
-function onUploaded(path: string) {
-  image.value = path
-}
 </script>
 
 <template>
   <UiFieldForm>
     <UiFieldFormItem
-      label="Image"
-      description="You can upload image or paste the public link to image."
+      label="Image URL"
+      description="Collez un lien public vers l’image. Laissez vide pour utiliser la bannière AcadéNice par défaut."
     >
-      <div class="flex items-center gap-2">
-        <UiInput
-          v-model="image"
-          placeholder="https://example.com/image.png"
-        />
-        <UiUpload @uploaded="onUploaded" />
-      </div>
+      <UiInput
+        v-model="image"
+        placeholder="https://example.com/banner.png"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+      />
+      <p class="mt-1 text-[12px] text-muted-foreground">
+        Formats courants (PNG/JPG/GIF). Les liens Google Drive/SharePoint privés peuvent ne pas
+        s’afficher.
+      </p>
     </UiFieldFormItem>
+
     <UiFieldFormItem label="Link">
-      <UiInput v-model="link" />
+      <UiInput
+        v-model="link"
+        placeholder="https://acadenice.fr"
+      />
     </UiFieldFormItem>
+
     <UiFieldFormItem
       label="Width"
-      :description="`Width in percentage. Current: ${width}%`"
+      :description="`Largeur en pourcentage. Actuelle : ${widthPct}%`"
     >
       <div class="flex items-center h-5">
         <UiSlider
-          v-model="width"
+          v-model="widthArr"
           :min="10"
           :max="100"
         />

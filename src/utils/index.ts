@@ -8,8 +8,7 @@ export function normalizeUrl(link: string) {
 
   if (re.test(link)) {
     url = link
-  }
-  else {
+  } else {
     url = `https://${link}`
   }
 

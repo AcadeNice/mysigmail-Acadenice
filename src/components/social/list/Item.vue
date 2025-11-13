@@ -10,7 +10,7 @@ const props = defineProps<Props>()
 const { socials } = useSignatures()
 
 const isActive = computed(() => {
-  return socials.value.some(social => social.icon === props.item.icon)
+  return socials.value.some((social) => social.icon === props.item.icon)
 })
 </script>
 

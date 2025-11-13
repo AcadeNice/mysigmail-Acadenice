@@ -12,8 +12,7 @@ function onDownload() {
 function onFileSelected(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
 
-  if (!file)
-    return
+  if (!file) return
 
   const reader = new FileReader()
 
@@ -47,7 +46,7 @@ function onFileSelected(e: Event) {
             <UilAngleDown class="ml-1 -mr-1 opacity-50 w-5 h-5" />
           </UiButton>
         </UiDropdownMenuTrigger>
-        <UiDropdownMenuContent _class="w-32">
+        <UiDropdownMenuContent class="w-32">
           <UiDropdownMenuItem @click="onCopySelect">
             Copy as Select
           </UiDropdownMenuItem>

@@ -3,41 +3,46 @@ import type { HTMLAttributes } from 'vue'
 
 import type { AvatarShape } from '@/composables/signatures/types'
 
+import { useImageVersion } from '@/composables/useImageVersion'
+
 import * as Base from '../base'
 
 interface Props {
   show?: boolean
-  src?: string
+  src?: string // "john_doe.png" ИЛИ полный URL
   size?: number
   shape?: AvatarShape
   tdStyle?: HTMLAttributes['style']
 }
-
 const props = defineProps<Props>()
 
 const { installed } = useSignatures()
+const { imageVersion } = useImageVersion()
 
 const roundness = computed(() => {
-  let value = 0
-
-  if (props.shape === 'round')
-    value = 100
-  if (props.shape === 'rounded-corner')
-    value = 5
-
-  return value
+  if (props.shape === 'round') return 100
+  if (props.shape === 'rounded-corner') return 5
+  return 0
 })
 
 const placeholder = computed(() => {
-  let img = '/assets/avatar.png'
+  const t = installed.value?.name
+  return t && ['SignatureTemplate6', 'SignatureTemplate7'].includes(t)
+    ? '/assets/avatar-2.png'
+    : '/assets/avatar.png'
+})
 
-  const template = ['SignatureTemplate6', 'SignatureTemplate7']
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
 
-  if (installed.value?.name && template.includes(installed.value.name)) {
-    img = '/assets/avatar-2.png'
+const resolvedSrc = computed(() => {
+  const s = props.src?.trim()
+  if (!s) return ''
+  // Полный URL: оставляем домен, только добавим ?v= для cache-bust
+  if (/^https?:\/\//i.test(s)) {
+    return `${s}${s.includes('?') ? '&' : '?'}v=${imageVersion.value || 0}`
   }
-
-  return img
+  // Имя файла из нашего сервера -> всегда публичная статика
+  return `${publicBase}/uploads/${s}?v=${imageVersion.value || 0}`
 })
 </script>
 
@@ -47,7 +52,7 @@ const placeholder = computed(() => {
       <td :style="tdStyle">
         <img
           :width="size"
-          :src="src ? src : placeholder"
+          :src="resolvedSrc || placeholder"
           :style="{
             'max-width': `${size}px`,
             'width': `${size}px`,

@@ -1,41 +1,69 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 
+import { computed } from 'vue'
+
 import type { AddonBanner } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
+import { useSignatures } from '@/composables/signatures/useSignatures'
 import { normalizeUrl } from '@/utils'
 
 interface Props {
   tdStyle?: HTMLAttributes['style']
   enableAnalytics?: boolean
 }
-
 defineProps<Props>()
 
-const { getAddonValue } = useSignatures()
+const DEFAULT_BANNER_IMAGE = '/assets/acadenice-banner.png'
+const { getBannerEffective } = useSignatures()
 
-const DEFAULT_BANNER_IMAGE = `/assets/mysigmail-promo-banner.png`
+const banner = computed<AddonBanner>(() => getBannerEffective())
+const bannerSrc = computed(() =>
+  banner.value.image?.trim() ? banner.value.image.trim() : DEFAULT_BANNER_IMAGE,
+)
 
-const banner = computed(() => getAddonValue<AddonBanner>('banner'))
+// ключ для форс-перерисовки при смене URL/ширины
+const imgKey = computed(() => `${bannerSrc.value}|${banner.value.width ?? 100}`)
 </script>
 
 <template>
-  <Base.Table width="auto">
+  <!-- Табличная обёртка под e-mail, базовая ширина 600 -->
+  <Base.Table width="600">
     <tr>
       <td
         valign="top"
-        :style="tdStyle"
+        :style="[{ paddingTop: '5px' }, tdStyle]"
+        style="padding: 0; margin: 0; padding-top: 5px"
       >
         <a
           :href="normalizeUrl(banner.link)"
           target="_blank"
+          style="text-decoration: none"
         >
-          <img
-            :src="banner.image || DEFAULT_BANNER_IMAGE"
-            alt="banner"
-            :style="{ maxWidth: banner.width ? `${banner.width}%` : '100%' }"
+          <!-- Контейнер, который масштабируем по процентах из редактора Width -->
+          <div
+            :style="{
+              maxWidth: '600px',
+              width: `${banner.width ?? 100}%`,
+            }"
           >
+            <img
+              :key="imgKey"
+              :src="bannerSrc"
+              alt="banner"
+              width="600"
+              style="
+                display: block;
+                width: 100%;
+                height: auto;
+                max-height: 150px;
+                border: 0;
+                outline: none;
+                text-decoration: none;
+              "
+            >
+          </div>
         </a>
       </td>
     </tr>

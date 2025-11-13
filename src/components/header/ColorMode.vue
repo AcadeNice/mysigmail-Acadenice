@@ -45,7 +45,6 @@ function onSelect(value: 'light' | 'dark' | 'auto') {
           :is="icon"
           class="size-4"
         />
-        <Terminal />
       </UiButton>
     </UiDropdownMenuTrigger>
     <UiDropdownMenuContent class="w-32">

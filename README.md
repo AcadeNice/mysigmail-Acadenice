@@ -27,6 +27,7 @@
 Ce dépôt est un fork du projet open source **[MySigMail](https://github.com/antonreshetov/mysigmail)** créé par [Anton Reshetov](https://github.com/antonreshetov) ([AGPL-3.0](https://github.com/antonreshetov/mysigmail/blob/master/LICENSE)).
 
 Ce fork ajoute :
+
 - une documentation en français ;
 - un exemple de déploiement Docker/Traefik ;
 - quelques ajustements pour stabiliser le build dans un contexte container.
@@ -86,6 +87,7 @@ cp docker-compose.example.yml docker-compose.yml
 ```
 
 Adaptez ensuite :
+
 - le domaine dans `traefik.http.routers.mysigmail.rule` ;
 - le nom du réseau dans `traefik.docker.network` et dans la section `networks` ;
 - toute variable ou volume spécifique à votre environnement.
@@ -107,6 +109,7 @@ Traefik détecte le service grâce aux labels. Vérifiez le routage (dashboard T
 ## 🤝 Contributions
 
 Les contributions sur ce fork sont bienvenues. Merci de conserver :
+
 - la mention du projet original ;
 - la licence AGPL-3.0 sur toute redistribution.
 

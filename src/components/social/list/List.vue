@@ -9,12 +9,11 @@ import { socials as socialData } from '@/data/socials'
 const { installed, socials } = useSignatures()
 
 function onClick(social: SocialData) {
-  const index = socials.value.findIndex(s => s.icon === social.icon)
+  const index = socials.value.findIndex((s) => s.icon === social.icon)
 
   if (index !== -1) {
     socials.value.splice(index, 1)
-  }
-  else {
+  } else {
     socials.value.push({
       icon: social.icon as Social,
       label: social.name,

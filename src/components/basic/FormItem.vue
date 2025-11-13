@@ -17,8 +17,7 @@ const localValue = ref(clone<BasicTool>(props.value))
 const index = props.index + 1
 
 function update(tool: BasicTool) {
-  if (!installed.value)
-    return
+  if (!installed.value) return
 
   const { label, type, value } = tool
 
@@ -28,12 +27,11 @@ function update(tool: BasicTool) {
 }
 
 function onRemoveField() {
-  if (!installed.value)
-    return
+  if (!installed.value) return
   installed.value.tools.basic.splice(index, 1)
 }
 
-watch(localValue, v => update(v), { deep: true })
+watch(localValue, (v) => update(v), { deep: true })
 </script>
 
 <template>

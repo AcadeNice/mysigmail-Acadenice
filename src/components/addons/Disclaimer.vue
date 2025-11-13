@@ -12,7 +12,7 @@ const value = computed({
   },
 })
 
-watch(selectedPreset, v => (v ? (value.value = v) : null))
+watch(selectedPreset, (v) => (v ? (value.value = v) : null))
 </script>
 
 <template>

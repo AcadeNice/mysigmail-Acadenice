@@ -1,4 +1,5 @@
 Hey there! We are really excited that you are interested in contributing. Before submitting your contribution, please make sure to take a moment and read through the following guide:
+
 ## Sending Pull Request
 
 ### Discuss First

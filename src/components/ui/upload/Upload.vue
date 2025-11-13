@@ -1,141 +1,171 @@
 <script setup lang="ts">
 import type { AcceptableValue } from 'reka-ui'
 
-import { S3Client } from '@aws-sdk/client-s3'
-import { Upload } from '@aws-sdk/lib-storage'
 import 'cropperjs/dist/cropper.css'
 import Cropper from 'cropperjs'
+import { computed, nextTick, ref, watch } from 'vue'
 
+import { useSignatures } from '@/composables/signatures/useSignatures'
 import { useSonner } from '@/composables/useSonner'
-
-const props = withDefaults(defineProps<Props>(), {
-  quality: 0.9,
-})
-
-const emit = defineEmits<Emits>()
 
 interface Props {
   cropWidth?: number
   cropHeight?: number
   quality?: number
 }
-
 interface Emits {
-  (e: 'uploaded', name: string): void
+  (e: 'uploaded', nameOrUrl: string): void
 }
 
+const props = withDefaults(defineProps<Props>(), { quality: 0.9 })
+const emit = defineEmits<Emits>()
 const { sonner } = useSonner()
+const { installed } = useSignatures()
 
-let s3Client: S3Client
-
-try {
-  s3Client = new S3Client({
-    region: import.meta.env.VITE_AWS_S3_REGION,
-    credentials: {
-      accessKeyId: import.meta.env.VITE_AWS_S3_ID,
-      secretAccessKey: import.meta.env.VITE_AWS_S3_KEY,
-    },
-  })
+// ---- роль тянем С СЕРВЕРА ----
+const isUser = ref(false)
+const loadingRole = ref(true)
+async function fetchRole() {
+  loadingRole.value = true
+  try {
+    const res = await fetch('/api/auth/status', { credentials: 'include' })
+    const data = await res.json()
+    isUser.value = data?.role === 'user'
+  } catch {
+    isUser.value = false
+  } finally {
+    loadingRole.value = false
+  }
 }
-catch (err) {
-  console.error('Missing some of the AWS S3 credentials')
-  console.error(err)
-}
+fetchRole()
 
+// ---- базовое имя из Full Name для user ----
+function readFullName(): string {
+  const basic = installed.value?.tools?.basic ?? []
+  const cand
+    = basic.find((f: any) => f.key === 'fullName' || f.id === 'full-name')
+      ?? basic.find((f: any) => /full\s*name/i.test(String(f?.label)))
+      ?? basic[0]
+  return (cand?.value ?? '').toString()
+}
+function sanitizeBase(input: string): string {
+  if (!input) return ''
+  let s = input.trim().toLowerCase()
+  s = s.replace(/\s+/g, '_')
+  s = s.normalize('NFKD').replace(/[\u0300-\u036F]/g, '')
+  s = s.replace(/[^a-z0-9_]/g, '')
+  s = s.replace(/_+/g, '_').replace(/^_+|_+$/g, '')
+  return s
+}
+const fullName = ref(readFullName())
+watch(
+  () => readFullName(),
+  (v) => {
+    fullName.value = v
+  },
+)
+const baseName = computed(() => sanitizeBase(fullName.value))
+
+// ---- проверка наличия файла (только user) ----
+const existingFile = ref<string>('') // john_doe.png
+const checking = ref(false)
+let t: number | undefined
+watch(
+  [baseName, isUser],
+  ([b, user]) => {
+    existingFile.value = ''
+    if (!user || !b) return
+    clearTimeout(t)
+    t = window.setTimeout(async () => {
+      checking.value = true
+      try {
+        const res = await fetch(`/api/file-info?base=${encodeURIComponent(b)}`, {
+          credentials: 'include',
+        })
+        const data = await res.json()
+        existingFile.value = data?.exists ? String(data.filename || '') : ''
+      } catch {
+        existingFile.value = ''
+      } finally {
+        checking.value = false
+      }
+    }, 200)
+  },
+  { immediate: true },
+)
+
+// ---- guest URL input ----
+const urlForGuest = ref('')
+
+// ---- cropper (user) ----
 let cropper: Cropper | null = null
-
 const openDialog = ref(false)
 const file = ref<File | null>(null)
-
-const inputRef = useTemplateRef('inputRef')
-const imageRef = useTemplateRef('imageRef')
-
+const imageRef = ref<HTMLImageElement | null>(null)
 const croppedPreview = ref('')
 const aspectRatio = ref(1)
-
-const widthOriginal = ref()
-const widthResized = ref()
-
+const widthOriginal = ref<number>()
+const widthResized = ref<number>()
 const isPending = ref(false)
 
 const aspectRatios = [
-  {
-    value: 1,
-    label: '1:1',
-  },
-  {
-    value: 4 / 3,
-    label: '4:3',
-  },
-  {
-    value: 2 / 3,
-    label: '2:3',
-  },
-  {
-    value: 16 / 9,
-    label: '16:9',
-  },
-  {
-    value: Number.NaN,
-    label: 'Free',
-  },
+  { value: 1, label: '1:1' },
+  { value: 4 / 3, label: '4:3' },
+  { value: 2 / 3, label: '2:3' },
+  { value: 16 / 9, label: '16:9' },
+  { value: Number.NaN, label: 'Free' },
 ]
-
-const isUploadAvailable = computed(() => {
-  return (
-    !!import.meta.env.VITE_AWS_S3_URL
-    && !!import.meta.env.VITE_AWS_S3_BASKET
-    && !!import.meta.env.VITE_AWS_S3_ID
-    && !!import.meta.env.VITE_AWS_S3_KEY
-    && !!import.meta.env.VITE_AWS_S3_REGION
-  )
-})
-
-const cropPreview = computed(() => {
-  if (!file.value)
-    return ''
-  return URL.createObjectURL(file.value)
-})
-
-const buttonText = computed(() => {
-  return isPending.value ? 'Uploading...' : 'Upload'
-})
+const cropPreview = computed(() => (file.value ? URL.createObjectURL(file.value) : ''))
+const buttonText = computed(() =>
+  isPending.value ? 'Uploading…' : existingFile.value ? 'Replace' : 'Upload',
+)
 
 function onClick() {
-  inputRef.value?.click()
+  if (!isUser.value) return
+  if (!baseName.value) {
+    sonner({
+      title: 'Full Name is required',
+      type: 'error',
+      description: 'Fill the Full Name first.',
+    })
+    return
+  }
+  file.value = null
+  openDialog.value = true
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/jpeg,image/png,image/gif'
+  input.onchange = (e: any) => {
+    const f: File | undefined = e.target?.files?.[0]
+    if (!f) {
+      openDialog.value = false
+      return
+    }
+    file.value = f
+    nextTick(() => initCropper())
+  }
+  input.click()
 }
 
-function onChangeInput(e: Event) {
-  const _file = (e.target as HTMLInputElement).files?.[0]
-
-  if (_file) {
-    openDialog.value = true
-    file.value = _file
-
-    nextTick(() => {
-      initCropper()
+function initCropper() {
+  if (!imageRef.value) return
+  if (cropper) {
+    cropper.replace(cropPreview.value!)
+  } else {
+    cropper = new Cropper(imageRef.value, {
+      aspectRatio: aspectRatio.value,
+      viewMode: 1,
+      autoCropArea: 1,
+      zoomable: false,
+      crop: () => {
+        croppedPreview.value = cropper?.getCroppedCanvas().toDataURL() || ''
+      },
     })
   }
 }
 
-function initCropper() {
-  if (cropper) {
-    cropper.replace(cropPreview.value!)
-  }
-
-  cropper = new Cropper(imageRef.value!, {
-    aspectRatio: aspectRatio.value,
-    viewMode: 1,
-    autoCropArea: 1,
-    zoomable: false,
-    crop: () => {
-      croppedPreview.value = cropper?.getCroppedCanvas().toDataURL() || ''
-    },
-  })
-}
-
-function setAspectRatio(ratio: AcceptableValue) {
-  cropper?.setAspectRatio(ratio as number)
+function setAspectRatio(v: AcceptableValue) {
+  cropper?.setAspectRatio(v as number)
 }
 
 function getCroppedImage() {
@@ -145,60 +175,73 @@ function getCroppedImage() {
         width: widthResized.value || props.cropWidth,
         imageSmoothingQuality: 'medium',
       })
-      .toBlob(blob => resolve(blob!), file.value?.type, props.quality)
+      .toBlob((blob) => resolve(blob!), file.value?.type, props.quality)
   })
 }
 
+function extFromMime(m: string): 'jpg' | 'png' | 'gif' {
+  if (m === 'image/png') return 'png'
+  if (m === 'image/gif') return 'gif'
+  return 'jpg'
+}
+
 async function uploadImage() {
-  if (!file.value)
+  if (!isUser.value || !file.value) return
+  if (!baseName.value) {
+    sonner({
+      title: 'Full Name is required',
+      type: 'error',
+      description: 'Fill the Full Name first.',
+    })
     return
+  }
+  if (existingFile.value) {
+    // eslint-disable-next-line no-alert
+    const ok = window.confirm('An image already exists. Replace it?')
+    if (!ok) return
+  }
 
   isPending.value = true
-
   const blob = await getCroppedImage()
+  if (!blob || (blob as any).size === 0) {
+    sonner({ title: 'Error', type: 'error', description: 'Empty image data' })
+    isPending.value = false
+    return
+  }
 
   try {
-    const key = `signature/upload/${Date.now()}-${file.value.name}`
+    const ext = existingFile.value
+      ? existingFile.value.split('.').pop() || extFromMime(file.value.type)
+      : extFromMime(file.value.type)
+    const finalName = `${baseName.value}.${ext}`
 
-    const upload = new Upload({
-      client: s3Client,
-      params: {
-        Bucket: import.meta.env.VITE_AWS_S3_BASKET,
-        Key: key,
-        Body: blob,
-        ContentType: file.value.type,
-        ACL: 'public-read',
-      },
-    })
+    const form = new FormData()
+    form.append('base', baseName.value) // важно — идёт перед файлом
+    form.append('file', blob, finalName)
 
-    await upload.done()
+    const res = await fetch('/api/upload', { method: 'POST', body: form, credentials: 'include' })
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+    const data = await res.json()
 
-    const cdnUrl = import.meta.env.VITE_AWS_S3_URL
-    emit('uploaded', `${cdnUrl}/${key}`)
-
+    existingFile.value = data.filename || finalName
     openDialog.value = false
     sonner({
       title: 'Success',
       type: 'success',
-      description: 'Image uploaded successfully',
+      description: existingFile.value ? 'Image replaced.' : 'Image uploaded.',
     })
-  }
-  catch (err) {
+    emit('uploaded', existingFile.value)
+  } catch (err) {
     console.error(err)
-    sonner({
-      title: 'Error',
-      type: 'error',
-      description: 'Failed to upload image',
-    })
-  }
-  finally {
+    sonner({ title: 'Error', type: 'error', description: 'Failed to upload image' })
+  } finally {
     isPending.value = false
   }
 }
 
-watch(croppedPreview, () => {
+watch(cropPreview, () => {
+  if (!cropPreview.value) return
   const img = new Image()
-
   img.src = cropPreview.value
   img.onload = () => {
     widthOriginal.value = img.width
@@ -207,20 +250,57 @@ watch(croppedPreview, () => {
 </script>
 
 <template>
-  <UiButton
-    variant="secondary"
-    :disabled="!isUploadAvailable"
-    @click="onClick"
+  <!-- Guest: только URL -->
+  <div
+    v-if="!isUser && !loadingRole"
+    class="flex w-full items-center gap-2"
   >
-    Upload <UilImage />
-  </UiButton>
-  <UiDialog v-model:open="openDialog">
-    <UiDialogContent class="min-w-2xl">
-      <UiDialogHeader>
-        <UiDialogTitle>Upload Image</UiDialogTitle>
-        <UiDialogDescription> Crop image to the desired size. </UiDialogDescription>
-      </UiDialogHeader>
-      <div>
+    <input
+      v-model="urlForGuest"
+      type="url"
+      placeholder="https://example.com/image.jpg"
+      class="w-full rounded-md border px-3 py-2 outline-none focus:ring"
+      @blur="emit('uploaded', urlForGuest)"
+      @keydown.enter.prevent="emit('uploaded', urlForGuest)"
+    >
+  </div>
+
+  <!-- User: загрузка -->
+  <div
+    v-else
+    class="inline-flex items-center gap-2"
+  >
+    <button
+      class="rounded-md border px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+      :disabled="!baseName || checking || loadingRole"
+      @click="onClick"
+    >
+      {{ buttonText }}
+    </button>
+    <span class="text-xs text-slate-500">
+      <template v-if="loadingRole || checking">Checking…</template>
+      <template v-else-if="baseName">
+        File: <strong>{{ existingFile || `${baseName}.*` }}</strong>
+      </template>
+      <template v-else>Fill the Full Name first</template>
+    </span>
+
+    <!-- Модалка кадрирования -->
+    <div
+      v-if="openDialog"
+      class="fixed inset-0 z-[99990] flex items-center justify-center p-4"
+    >
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div class="relative z-[99991] w-full max-w-2xl rounded-xl border bg-white p-6 shadow-lg">
+        <div class="mb-3">
+          <h3 class="text-lg font-semibold">
+            Upload Image
+          </h3>
+          <p class="text-sm text-slate-500">
+            Crop image and upload. The file name is auto-derived from your Full Name.
+          </p>
+        </div>
+
         <div class="grid grid-cols-[3fr_1fr] gap-4 overflow-hidden">
           <div class="relative max-h-[250px] min-h-[200px]">
             <img
@@ -232,58 +312,59 @@ watch(croppedPreview, () => {
           <div class="flex flex-col items-center gap-2">
             <img
               :src="croppedPreview"
-              alt="cropped-image-preview"
-              class="object-contain size-36 border rounded-md"
+              alt="cropped"
+              class="size-36 rounded-md border object-contain"
             >
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-slate-500">
               Preview
             </p>
           </div>
         </div>
-        <div class="mt-4">
-          <UiFieldForm>
-            <UiFieldFormItem label="Aspect Ratio">
-              <UiToggleGroup
-                v-model="aspectRatio"
-                variant="outline"
-                @update:model-value="setAspectRatio"
+
+        <div class="mt-4 space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium">Aspect Ratio</label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="ratio in aspectRatios"
+                :key="ratio.label"
+                class="rounded-md border px-2 py-1 text-sm hover:bg-slate-50"
+                @click="setAspectRatio(ratio.value as unknown as AcceptableValue)"
               >
-                <UiToggleGroupItem
-                  v-for="ratio in aspectRatios"
-                  :key="ratio.label"
-                  :value="ratio.value"
-                >
-                  {{ ratio.label }}
-                </UiToggleGroupItem>
-              </UiToggleGroup>
-            </UiFieldFormItem>
-            <UiFieldFormItem
-              label="Resize to"
-              :description="`Original width: ${widthOriginal}px`"
+                {{ ratio.label }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium">
+              Resize to <span class="text-slate-500">(Original: {{ widthOriginal ?? '—' }}px)</span>
+            </label>
+            <input
+              v-model.number="widthResized"
+              type="number"
+              class="w-24 rounded-md border px-2 py-1 outline-none focus:ring"
+              min="1"
             >
-              <UiInput
-                v-model="widthResized"
-                type="number"
-                size="sm"
-                class="w-24"
-              />
-            </UiFieldFormItem>
-            <UiButton
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button
+              class="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+              @click="openDialog = false"
+            >
+              Cancel
+            </button>
+            <button
+              class="rounded-md bg-black px-3 py-2 text-sm text-white hover:bg-black/90 disabled:opacity-50"
               :disabled="isPending"
               @click="uploadImage"
             >
               {{ buttonText }}
-            </UiButton>
-          </UiFieldForm>
+            </button>
+          </div>
         </div>
       </div>
-    </UiDialogContent>
-  </UiDialog>
-  <input
-    ref="inputRef"
-    type="file"
-    accept="image/jpeg, image/png, image/gif"
-    class="hidden"
-    @change="onChangeInput"
-  >
+    </div>
+  </div>
 </template>

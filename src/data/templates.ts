@@ -1,3 +1,6 @@
+/*
+   - For guests, the "banner" addon is filtered out from all templates/defaults.
+*/
 import { nanoid } from 'nanoid'
 
 import type {
@@ -8,127 +11,91 @@ import type {
   SocialTool,
 } from '@/composables/signatures/types'
 
+import { useAccess } from '@/composables/useAccess'
+
 export interface Template extends Signature {
   preview?: string
   isNew?: boolean
 }
 
 export function useTemplateData() {
+  const { isUser } = useAccess()
+
+  // Palette: azur/mediterranean blues + soft neutrals
+  const BRAND = {
+    main: '#2A7DB8', // primary azur
+    secondary: '#1F5E8A', // darker blue
+    bg: '#0F2F4A', // deep night blue
+    textOnBg: '#FFFFFF',
+    font: 'Inter, Segoe UI, Arial, Helvetica, sans-serif',
+  }
+
   const DEFAULTS = {
     basic: [
-      {
-        id: nanoid(8),
-        label: 'Avatar',
-        type: 'image',
-        main: true,
-        value: '',
-      },
-      {
-        id: nanoid(8),
-        label: 'Full Name',
-        type: 'text',
-        main: true,
-        value: 'John Doe',
-      },
+      { id: nanoid(8), label: 'Avatar', type: 'image', main: true, value: '' },
+      { id: nanoid(8), label: 'Full Name', type: 'text', main: true, value: 'Prénom Nom' },
       {
         id: nanoid(8),
         label: 'Job Title',
         type: 'text',
         main: true,
-        value: 'Frontend developer',
+        value: 'Enseignant · AcadéNice',
       },
-      {
-        id: nanoid(8),
-        label: 'Company',
-        type: 'text',
-        main: true,
-        value: 'JohnDoe LLC',
-      },
-      {
-        id: nanoid(8),
-        label: 'Website',
-        type: 'link',
-        main: true,
-        value: 'https://example.com',
-      },
+      { id: nanoid(8), label: 'Company', type: 'text', main: true, value: 'AcadéNice' },
+      { id: nanoid(8), label: 'Website', type: 'link', main: true, value: 'https://acadenice.fr' },
       {
         id: nanoid(8),
         label: 'Email',
         type: 'email',
         main: true,
-        value: 'johndoe@example.com',
-      },
-      {
-        id: nanoid(8),
-        label: 'Phone',
-        type: 'phone',
-        main: true,
-        value: '+ 1 123 456 7890',
+        value: 'prenom.nom@acadenice.fr',
       },
     ] as BasicTool[],
+
     options: {
-      mainColor: '#396BDD',
-      secondaryColor: '#396BDD',
-      bgColor: '#3D6693',
-      bgTextColor: '#fff',
+      mainColor: BRAND.main,
+      secondaryColor: BRAND.secondary,
+      bgColor: BRAND.bg,
+      bgTextColor: BRAND.textOnBg,
       avatar: true,
-      avatarSize: 120,
-      avatarShape: 'square',
-      fontFamily: 'Arial, Helvetica, sans-serif',
+      avatarSize: 112,
+      avatarShape: 'rounded-corner',
+      fontFamily: BRAND.font,
       fontSize: 12,
       jobSeparator: '/',
     } as OptionsTool,
+
     addons: [
       {
         label: 'Disclaimer',
         type: 'disclaimer',
         isNew: false,
         value:
-          'If you like MySigMail, you can share it on social networks by telling your friends about our service and get a 20% discount coupon. To participate, follow us @mysigmail, write a tweet with a link to @mysigmail and https://mysigmail.com. Or just click on the banner above for tweet and follow us. Email us at contact@mysigmail.com about tweeting and get a coupon.',
+          'CONFIDENTIALITY: This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you are not the intended recipient, please notify the sender and delete this message.',
       },
       {
         label: 'Banner',
         type: 'banner',
         isNew: false,
         value: {
-          image: '/assets/mysigmail-promo-banner.png',
-          link: 'https://twitter.com/intent/tweet?url=&text=Take%20a%20look%20at%20this%20awesome%20email%20signature%20generator%20%40mysigmail%20https%3A%2F%2Fmysigmail.com.',
-        },
-      },
-      {
-        label: 'Video Conference',
-        type: 'videoConference',
-        isNew: false,
-        value: {
-          text: 'Meet me on Google Hangouts',
-          type: 'hangouts',
-          link: '',
+          image: '/acadenice-banner.png',
+          link: 'https://acadenice.fr',
         },
       },
     ] as AddonTool[],
+
     socials: [
-      {
-        icon: 'facebook',
-        value: 'https://example.com',
-        label: 'Facebook',
-      },
-      {
-        icon: 'twitter',
-        value: 'https://example.com',
-        label: 'Twitter',
-      },
-      {
-        icon: 'linkedin',
-        value: 'https://example.com',
-        label: 'LinkedIn',
-      },
-      {
-        icon: 'instagram',
-        value: 'https://example.com',
-        label: 'Instagram',
-      },
+      { icon: 'facebook', value: 'https://facebook.com/acadenice', label: 'Facebook' },
+      { icon: 'twitter', value: 'https://x.com/acadenice', label: 'Twitter' },
+      { icon: 'linkedin', value: 'https://linkedin.com/school/acadenice', label: 'LinkedIn' },
+      { icon: 'instagram', value: 'https://instagram.com/acadenice', label: 'Instagram' },
     ] as SocialTool[],
   }
+
+  // Role-based addons: guests get NO banner at all
+  const addonsForRole = isUser.value
+    ? DEFAULTS.addons
+    : DEFAULTS.addons.filter((a) => a.type !== 'banner')
 
   const templates: Template[] = [
     {
@@ -138,7 +105,7 @@ export function useTemplateData() {
       tools: {
         basic: DEFAULTS.basic,
         options: DEFAULTS.options,
-        addons: DEFAULTS.addons,
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-1.png',
@@ -150,7 +117,7 @@ export function useTemplateData() {
       tools: {
         basic: DEFAULTS.basic,
         options: DEFAULTS.options,
-        addons: DEFAULTS.addons,
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-8.png',
@@ -161,13 +128,8 @@ export function useTemplateData() {
       isNew: false,
       tools: {
         basic: DEFAULTS.basic,
-        options: {
-          ...DEFAULTS.options,
-          avatarSize: 96,
-          jobSeparator: 'br',
-          column1Width: 20,
-        },
-        addons: DEFAULTS.addons,
+        options: { ...DEFAULTS.options, avatarSize: 96, jobSeparator: 'br', column1Width: 20 },
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-2.png',
@@ -178,12 +140,8 @@ export function useTemplateData() {
       isNew: false,
       tools: {
         basic: DEFAULTS.basic,
-        options: {
-          ...DEFAULTS.options,
-          avatarSize: 86,
-          jobSeparator: 'br',
-        },
-        addons: DEFAULTS.addons,
+        options: { ...DEFAULTS.options, avatarSize: 86, jobSeparator: 'br' },
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-3.png',
@@ -194,12 +152,8 @@ export function useTemplateData() {
       isNew: false,
       tools: {
         basic: DEFAULTS.basic,
-        options: {
-          ...DEFAULTS.options,
-          avatarSize: 94,
-          jobSeparator: 'br',
-        },
-        addons: DEFAULTS.addons,
+        options: { ...DEFAULTS.options, avatarSize: 94, jobSeparator: 'br' },
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-4.png',
@@ -210,13 +164,8 @@ export function useTemplateData() {
       isNew: false,
       tools: {
         basic: DEFAULTS.basic,
-        options: {
-          ...DEFAULTS.options,
-          avatarSize: 94,
-          jobSeparator: 'br',
-          column1Width: 20,
-        },
-        addons: DEFAULTS.addons,
+        options: { ...DEFAULTS.options, avatarSize: 94, jobSeparator: 'br', column1Width: 20 },
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-5.png',
@@ -229,13 +178,14 @@ export function useTemplateData() {
         basic: DEFAULTS.basic,
         options: {
           ...DEFAULTS.options,
-          mainColor: '#3D6693',
-          secondaryColor: '#3D6693',
-          bgColor: '#3D6693',
+          mainColor: BRAND.bg,
+          secondaryColor: BRAND.bg,
+          bgColor: BRAND.bg,
+          bgTextColor: BRAND.textOnBg,
           avatarSize: 74,
           jobSeparator: 'br',
         },
-        addons: DEFAULTS.addons,
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-6.png',
@@ -248,13 +198,14 @@ export function useTemplateData() {
         basic: DEFAULTS.basic,
         options: {
           ...DEFAULTS.options,
-          mainColor: '#5A7CAA',
-          bgColor: '#3D6693',
+          mainColor: '#4F86C6',
+          bgColor: BRAND.bg,
+          bgTextColor: BRAND.textOnBg,
           avatarSize: 68,
           avatarShape: 'round',
           jobSeparator: '/',
         },
-        addons: DEFAULTS.addons,
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-7.png',
@@ -265,11 +216,8 @@ export function useTemplateData() {
       isNew: false,
       tools: {
         basic: DEFAULTS.basic,
-        options: {
-          ...DEFAULTS.options,
-          avatarSize: 96,
-        },
-        addons: DEFAULTS.addons,
+        options: { ...DEFAULTS.options, avatarSize: 96 },
+        addons: addonsForRole,
         socials: DEFAULTS.socials,
       },
       preview: 'template-9.png',
@@ -278,6 +226,7 @@ export function useTemplateData() {
 
   return {
     templates,
-    DEFAULTS,
+    // Expose DEFAULTS with role-based addons so downstream UIs also see no banner for guests
+    DEFAULTS: { ...DEFAULTS, addons: addonsForRole },
   }
 }

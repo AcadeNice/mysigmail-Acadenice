@@ -13,6 +13,16 @@ export const addons: AddonTool[] = [
     },
   },
   {
+    label: 'Tracking Pixel',
+    type: 'trackingPixel',
+    isNew: true,
+    value: {
+      url: '',
+      enabled: false,
+      recipient: '',
+    },
+  },
+  {
     label: 'Disclaimer',
     type: 'disclaimer',
     isNew: false,

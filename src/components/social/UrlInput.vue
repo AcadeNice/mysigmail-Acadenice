@@ -11,7 +11,7 @@ const { getSocialValue, setSocialValue } = useSignatures()
 
 const url = computed({
   get: () => getSocialValue(props.type),
-  set: value => setSocialValue(props.type, value ?? ''),
+  set: (value) => setSocialValue(props.type, value ?? ''),
 })
 </script>
 

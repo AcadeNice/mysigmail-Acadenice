@@ -11,25 +11,22 @@ async function checkClipboardPermission() {
       name: 'clipboard-write' as PermissionName,
     })
     return permission.state !== 'denied'
-  }
-  catch {
-    // для Safari и Firefox т.к. не поддерживают clipboard-write
+  } catch {
+    //  Safari  Firefox
     return true
   }
 }
 
 function getHtml() {
   const el = document.querySelector('[data-slot="signature"]')
-  if (!el)
-    return
+  if (!el) return
 
   html.value = el.outerHTML.replace(/<!--v-if-->/g, '')
 }
 
 async function onCopySelect() {
   const el = document.querySelector('[data-slot="signature"]')
-  if (!el)
-    return
+  if (!el) return
 
   const html = el.outerHTML
   const plainText = el.textContent || ''
@@ -58,8 +55,7 @@ async function onCopySelect() {
       type: 'success',
       description: 'Signature copied to clipboard.',
     })
-  }
-  catch (err) {
+  } catch (err) {
     if (err instanceof Error && err.name === 'NotAllowedError') {
       sonner({
         title: 'Oops! Something went wrong.',
@@ -72,8 +68,7 @@ async function onCopySelect() {
 
 async function onCopyHTML() {
   const el = document.querySelector('[data-slot="signature"]')
-  if (!el)
-    return
+  if (!el) return
 
   try {
     const permission = await checkClipboardPermission()
@@ -95,8 +90,7 @@ async function onCopyHTML() {
       type: 'success',
       description: 'Signature copied to clipboard.',
     })
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err)
   }
 }

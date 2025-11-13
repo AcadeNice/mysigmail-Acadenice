@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AvatarShape } from '@/composables/signatures/types'
 
+import { useSignatures } from '@/composables/signatures/useSignatures'
 import { attributes } from '@/data/attributes'
 
 const { isBgColorAvailable, isColumnSizeAvailable, isSecondColorAvailable, options }

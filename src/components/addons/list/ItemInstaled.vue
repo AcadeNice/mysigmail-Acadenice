@@ -13,7 +13,7 @@ const { addons } = useSignatures()
 const isOpen = ref(false)
 
 function deleteAddon() {
-  const index = addons.value?.findIndex(addon => addon.type === props.type)
+  const index = addons.value?.findIndex((addon) => addon.type === props.type)
   if (index !== undefined) {
     addons.value?.splice(index, 1)
   }
@@ -51,6 +51,7 @@ function deleteAddon() {
       class="p-2"
     >
       <AddonsDisclaimer v-if="type === 'disclaimer'" />
+      <AddonsTrackingPixel v-if="type === 'trackingPixel'" />
       <AddonsCta v-if="type === 'cta'" />
       <AddonsBanner v-if="type === 'banner'" />
       <AddonsVideoConference v-if="type === 'videoConference'" />

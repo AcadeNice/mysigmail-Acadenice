@@ -1,78 +1,70 @@
 import { useStorage } from '@vueuse/core'
+/* Strict guest-safe signatures store.
+   - Guests cannot change server-side "banner" or "trackingPixel" addons.
+   - Guests get a local guestBanner override stored in localStorage.
+   - JSON import for guests auto-strips the "banner" and "trackingPixel" addons.
+*/
+import { computed, ref, watch } from 'vue'
 
+import { useAccess } from '@/composables/useAccess'
 import { useSonner } from '@/composables/useSonner'
 import { useTemplateData } from '@/data/templates'
 import { clone } from '@/utils'
 
-import type { Addon, AddonValue, Signature, Social } from './types'
+import type { Addon, AddonBanner, AddonTrackingPixel, AddonValue, Signature, Social } from './types'
 
 const { sonner } = useSonner()
-
 const { templates } = useTemplateData()
+const { isUser } = useAccess()
 
 const isInit = ref(false)
 
 const selectedIdStore = useStorage('selected-signature-id', '')
 const unsavedSignatureStore = useStorage('unsaved-signature', '')
 
+/** ========= Основное реактивное состояние ========= */
 const selectedId = ref<string>()
 const installed = ref<Signature>(templates[0])
 
-const mainFields = computed(() => {
-  return installed.value.tools.basic.filter(i => i.type !== 'image')
-})
-
-const isMainFieldsEmpty = computed(() => mainFields.value.every(i => !i.value))
-
+/** ========= Базовые вычисления ========= */
+const mainFields = computed(() => installed.value.tools.basic.filter((i) => i.type !== 'image'))
+const isMainFieldsEmpty = computed(() => mainFields.value.every((i) => !i.value))
 const imageField = computed(() => installed.value.tools.basic[0].value)
 
 const nameField = computed(() => {
-  if (isMainFieldsEmpty.value) {
-    return templates[0].tools.basic[1]
-  }
+  if (isMainFieldsEmpty.value) return templates[0].tools.basic[1]
   return installed.value.tools.basic[1]
 })
 
 const jobFields = computed(() => {
-  if (isMainFieldsEmpty.value) {
-    return templates[0].tools.basic.slice(2, 4)
-  }
+  if (isMainFieldsEmpty.value) return templates[0].tools.basic.slice(2, 4)
   return mainFields.value.slice(1, 3)
 })
 
 const otherFields = computed(() => {
-  if (isMainFieldsEmpty.value) {
-    return templates[0].tools.basic.slice(4)
-  }
+  if (isMainFieldsEmpty.value) return templates[0].tools.basic.slice(4)
   return mainFields.value.slice(3)
 })
 
 const options = computed(() => installed.value.tools.options)
 
-const fontBase = computed(() => {
-  return {
-    fontSize: `${options.value.fontSize}px`,
-    fontFamily: options.value.fontFamily,
-    margin: '0',
-    lineHeight: '150%',
-  }
-})
+const fontBase = computed(() => ({
+  fontSize: `${options.value.fontSize}px`,
+  fontFamily: options.value.fontFamily,
+  margin: '0',
+  lineHeight: '150%',
+}))
 
-const fontAccent = computed(() => {
-  return {
-    ...fontBase.value,
-    fontSize: options.value && `${options.value.fontSize + 2}px`,
-  }
-})
+const fontAccent = computed(() => ({
+  ...fontBase.value,
+  fontSize: options.value && `${options.value.fontSize + 2}px`,
+}))
 
 const addons = computed(() => installed.value.tools.addons || [])
-
 const socials = computed(() => installed.value.tools.socials || [])
 
 const isImageFieldEmpty = computed(() => !imageField.value)
-
 const isSocialsEmpty = computed(() => !socials.value.length)
-
 const isAddonsEmpty = computed(() => !addons.value.length)
 
 const isBgColorAvailable = computed(() => {
@@ -99,47 +91,48 @@ const isColumnSizeAvailable = computed(() => {
   return available.includes(installed.value.name)
 })
 
+/** ========= Утилиты по аддонам/соцкам ========= */
 function isAddonTool(type: Addon) {
-  return installed.value.tools.addons.some(i => i.type === type)
+  return installed.value.tools.addons.some((i) => i.type === type)
 }
 
 function isOnlyAddon(type: Addon) {
-  return installed.value.tools.addons.findIndex(i => i.type === type) > -1
+  return installed.value.tools.addons.findIndex((i) => i.type === type) > -1
 }
 
 function getAddonValue<T extends AddonValue>(type: Addon): T {
-  return installed.value.tools.addons.find(i => i.type === type)?.value as T
+  return installed.value.tools.addons.find((i) => i.type === type)?.value as T
 }
 
+/** Guests must not directly set server-side banner or trackingPixel */
 function setAddonValue<T extends AddonValue>(type: Addon, value: T) {
-  const addon = addons.value.find(i => i.type === type)
-
-  if (addon) {
-    addon.value = value
-  }
+  if (!isUser.value && (type === 'banner' || type === 'trackingPixel')) return
+  const addon = addons.value.find((i) => i.type === type)
+  if (addon) addon.value = value
 }
 
+/** Guests must not directly patch server-side banner or trackingPixel */
 function patchAddonValue<T extends AddonValue>(type: Addon, key: keyof T, value: T[keyof T]) {
-  const addon = addons.value.find(i => i.type === type)
+  if (!isUser.value && (type === 'banner' || type === 'trackingPixel')) return
+  const addon = addons.value.find((i) => i.type === type)
   if (addon) {
     ;(addon.value as Record<string, any>)[key as string] = value
   }
 }
 
 function getSocialValue(type: Social) {
-  return socials.value.find(i => i.icon === type)?.value
+  return socials.value.find((i) => i.icon === type)?.value
 }
 
 function setSocialValue(type: Social, value: string) {
-  const social = socials.value.find(i => i.icon === type)
-  if (social) {
-    social.value = value
-  }
+  const social = socials.value.find((i) => i.icon === type)
+  if (social) social.value = value
 }
 
+/** ========= Шаблоны ========= */
 function resetInstalledToDefault() {
   installed.value = clone(templates[0])
-  installed.value.tools.basic.forEach(i => (i.value = ''))
+  installed.value.tools.basic.forEach((i) => (i.value = ''))
 }
 
 function setTemplate(signature: Signature) {
@@ -159,6 +152,7 @@ function setTemplate(signature: Signature) {
   }
 }
 
+/** ========= Экспорт/импорт ========= */
 function downloadJSON(signature: Signature) {
   const data = JSON.stringify(signature)
   const blob = new Blob([data], { type: 'application/json' })
@@ -166,17 +160,30 @@ function downloadJSON(signature: Signature) {
 
   const a = document.createElement('a')
   a.href = url
-  a.download = 'mysigmail-signature.json'
+  a.download = 'acadenice-signature.json'
   a.click()
   URL.revokeObjectURL(url)
+}
+
+/** Guests: strip banner & trackingPixel addons from imported JSON */
+function stripBannerIfGuest(sig: Signature) {
+  if (isUser.value) return sig
+  return {
+    ...sig,
+    tools: {
+      ...sig.tools,
+      addons: (sig.tools.addons || []).filter(
+        (a) => a.type !== 'banner' && a.type !== 'trackingPixel',
+      ),
+    },
+  } as Signature
 }
 
 async function uploadJSON(json: string) {
   let data: any
   try {
     data = JSON.parse(json)
-  }
-  catch {
+  } catch {
     sonner({ title: 'Invalid JSON format', type: 'error' })
     throw new Error('Invalid JSON format')
   }
@@ -210,19 +217,18 @@ async function uploadJSON(json: string) {
     throw new Error('Invalid signature: options is invalid')
   }
 
-  installed.value = data as Signature
+  installed.value = stripBannerIfGuest(data as Signature)
 }
 
+/** ========= Инициализация / autosave ========= */
 function init() {
   const unsavedSignature = unsavedSignatureStore.value
-
   if (unsavedSignature) {
     try {
-      const data = JSON.parse(unsavedSignature)
-      installed.value = data
+      const data = JSON.parse(unsavedSignature) as Signature
+      installed.value = stripBannerIfGuest(data)
       unsavedSignatureStore.value = ''
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err)
       resetInstalledToDefault()
     }
@@ -233,6 +239,55 @@ watch(installed, () => (unsavedSignatureStore.value = JSON.stringify(installed.v
   deep: true,
 })
 
+/** ========= ГОСТЕВОЙ ОВЕРРАЙД ДЛЯ БАННЕРА ========= */
+/** Хранится отдельно в localStorage и используется ТОЛЬКО для гостей */
+interface GuestBanner {
+  image: string
+  link: string
+  width: number
+}
+const guestBanner = useStorage<GuestBanner>('guest-banner', {
+  image: '',
+  link: '',
+  width: 100,
+})
+
+/**
+ * Эффективные геттер/патчер баннера:
+ *  - user → читаем/пишем обычный аддон banner
+ *  - guest → читаем/пишем guestBanner (localStorage)
+ */
+function getBannerEffective(): AddonBanner {
+  if (isUser.value) {
+    return (getAddonValue<AddonBanner>('banner') ?? {
+      image: '',
+      link: '',
+      width: 100,
+    }) as AddonBanner
+  }
+  return guestBanner.value as AddonBanner
+}
+
+function patchBannerEffective<K extends keyof AddonBanner>(key: K, value: AddonBanner[K]) {
+  if (isUser.value) {
+    patchAddonValue<AddonBanner>('banner', key, value)
+  } else {
+    ;(guestBanner.value as any)[key as string] = value
+  }
+}
+
+/** ========= «Эффективный» пиксель трекинга ========= */
+/** Для гостя всегда выключен; для user — берём реальные значения. */
+function getTrackingPixelEffective(): AddonTrackingPixel {
+  const v = getAddonValue<AddonTrackingPixel>('trackingPixel')
+  if (!v || typeof v !== 'object') return { url: '', enabled: false }
+  if (!isUser.value) return { url: '', enabled: false }
+  const url = (v.url ?? '').toString().trim()
+  const enabled = Boolean(v.enabled && url)
+  return { url, enabled }
+}
+
+/** ========= Экспорт стора ========= */
 export function useSignatures() {
   return {
     addons,
@@ -268,5 +323,13 @@ export function useSignatures() {
     setTemplate,
     socials,
     uploadJSON,
+
+    // Баннер (эффективный API)
+    getBannerEffective,
+    patchBannerEffective,
+    guestBanner,
+
+    // Пиксель (эффективный API)
+    getTrackingPixelEffective,
   }
 }
