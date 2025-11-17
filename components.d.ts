@@ -106,6 +106,7 @@ declare module 'vue' {
     UiInput: typeof import('./src/components/ui/shadcn/input/Input.vue')['default']
     UiLabel: typeof import('./src/components/ui/shadcn/label/Label.vue')['default']
     UilAngleDown: typeof import('~icons/uil/angle-down')['default']
+    UilElipsisDoubleVAlt: typeof import('~icons/uil/elipsis-double-v-alt')['default']
     UilExclamationTriangle: typeof import('~icons/uil/exclamation-triangle')['default']
     UilImage: typeof import('~icons/uil/image')['default']
     UilPen: typeof import('~icons/uil/pen')['default']

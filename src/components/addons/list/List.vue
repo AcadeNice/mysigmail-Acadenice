@@ -4,9 +4,12 @@ import type { AddonTool } from '@/composables/signatures/types'
 import { addons as addonsData } from '@/data/addons'
 
 const { addons } = useSignatures()
+const { isUser } = useAccess()
 
 const addonsList = computed(() => {
-  return addonsData.filter((addon) => !addons.value.find((a) => a.type === addon.type))
+  return addonsData
+    .filter((a) => isUser.value || a.type !== 'trackingPixel')
+    .filter((a) => !addons.value.find((b) => b.type === a.type))
 })
 
 function addAddon(addon: AddonTool) {
