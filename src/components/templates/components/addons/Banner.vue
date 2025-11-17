@@ -15,7 +15,7 @@ interface Props {
 }
 defineProps<Props>()
 
-const DEFAULT_BANNER_IMAGE = '/assets/acadenice-banner.png'
+const DEFAULT_BANNER_IMAGE = ''
 const { getBannerEffective } = useSignatures()
 
 const banner = computed<AddonBanner>(() => getBannerEffective())

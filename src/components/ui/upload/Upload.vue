@@ -271,7 +271,7 @@ watch(cropPreview, () => {
     class="inline-flex items-center gap-2"
   >
     <button
-      class="rounded-md border px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+      class="rounded-md border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 bg-transparent dark:bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 border-slate-200 dark:border-slate-700 disabled:opacity-50"
       :disabled="!baseName || checking || loadingRole"
       @click="onClick"
     >
@@ -290,32 +290,38 @@ watch(cropPreview, () => {
       v-if="openDialog"
       class="fixed inset-0 z-[99990] flex items-center justify-center p-4"
     >
-      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div class="relative z-[99991] w-full max-w-2xl rounded-xl border bg-white p-6 shadow-lg">
+      <!-- overlay -->
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      <!-- panel -->
+      <div
+        class="relative z-[99991] w-full max-w-2xl rounded-xl border p-6 shadow-lg bg-white text-slate-900 border-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700"
+      >
         <div class="mb-3">
           <h3 class="text-lg font-semibold">
             Upload Image
           </h3>
-          <p class="text-sm text-slate-500">
+          <p class="text-sm text-slate-500 dark:text-slate-400">
             Crop image and upload. The file name is auto-derived from your Full Name.
           </p>
         </div>
 
         <div class="grid grid-cols-[3fr_1fr] gap-4 overflow-hidden">
-          <div class="relative max-h-[250px] min-h-[200px]">
+          <div class="relative max-h-[250px] min-h-[200px] bg-white dark:bg-slate-800">
             <img
               ref="imageRef"
               :src="cropPreview"
               alt="crop-preview"
+              class="max-h-[250px]"
             >
           </div>
           <div class="flex flex-col items-center gap-2">
             <img
               :src="croppedPreview"
               alt="cropped"
-              class="size-36 rounded-md border object-contain"
+              class="size-36 rounded-md border object-contain border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             >
-            <p class="text-sm text-slate-500">
+            <p class="text-sm text-slate-500 dark:text-slate-400">
               Preview
             </p>
           </div>
@@ -328,7 +334,7 @@ watch(cropPreview, () => {
               <button
                 v-for="ratio in aspectRatios"
                 :key="ratio.label"
-                class="rounded-md border px-2 py-1 text-sm hover:bg-slate-50"
+                class="rounded-md border px-2 py-1 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                 @click="setAspectRatio(ratio.value as unknown as AcceptableValue)"
               >
                 {{ ratio.label }}
@@ -338,25 +344,26 @@ watch(cropPreview, () => {
 
           <div>
             <label class="mb-1 block text-sm font-medium">
-              Resize to <span class="text-slate-500">(Original: {{ widthOriginal ?? '—' }}px)</span>
+              Resize to
+              <span class="text-slate-500 dark:text-slate-400">(Original: {{ widthOriginal ?? '—' }}px)</span>
             </label>
             <input
               v-model.number="widthResized"
               type="number"
-              class="w-24 rounded-md border px-2 py-1 outline-none focus:ring"
               min="1"
+              class="w-24 rounded-md border px-2 py-1 outline-none focus:ring bg-white text-slate-900 border-slate-200 placeholder-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:placeholder-slate-500"
             >
           </div>
 
           <div class="flex justify-end gap-2">
             <button
-              class="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+              class="rounded-md border px-3 py-2 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
               @click="openDialog = false"
             >
               Cancel
             </button>
             <button
-              class="rounded-md bg-black px-3 py-2 text-sm text-white hover:bg-black/90 disabled:opacity-50"
+              class="rounded-md px-3 py-2 text-sm text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 disabled:opacity-50"
               :disabled="isPending"
               @click="uploadImage"
             >
