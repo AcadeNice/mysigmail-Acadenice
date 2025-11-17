@@ -22,9 +22,9 @@ const link = computed<string>({
 })
 
 const widthPct = computed<number>({
-  get: () => getBannerEffective().width ?? 100,
+  get: () => getBannerEffective().width ?? 35,
   set: (val) => {
-    const v = Math.max(10, Math.min(100, Math.round(val ?? 100)))
+    const v = Math.max(10, Math.min(100, Math.round(val ?? 35)))
     patchBannerEffective('width', v)
   },
 })

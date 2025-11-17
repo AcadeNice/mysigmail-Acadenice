@@ -41,11 +41,11 @@ const imgKey = computed(() => `${bannerSrc.value}|${banner.value.width ?? 100}`)
           target="_blank"
           style="text-decoration: none"
         >
-          <!-- Контейнер, который масштабируем по процентах из редактора Width -->
+          <!--  Width -->
           <div
             :style="{
               maxWidth: '600px',
-              width: `${banner.width ?? 100}%`,
+              width: `${banner.width ?? 35}%`,
             }"
           >
             <img

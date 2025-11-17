@@ -67,18 +67,11 @@ export function useTemplateData() {
 
     addons: [
       {
-        label: 'Disclaimer',
-        type: 'disclaimer',
-        isNew: false,
-        value:
-          'CONFIDENTIALITY: This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you are not the intended recipient, please notify the sender and delete this message.',
-      },
-      {
         label: 'Banner',
         type: 'banner',
         isNew: false,
         value: {
-          image: 'public/assets/acadenice-banner.png',
+          image: '/assets/acadenice-banner.png',
           link: 'https://acadenice.fr',
         },
       },

@@ -33,9 +33,9 @@ export const addons: AddonTool[] = [
     type: 'banner',
     isNew: false,
     value: {
-      image: '',
-      link: '',
-      width: 100,
+      image: '/assets/acadenice-banner.png',
+      link: 'https://acadenice.fr',
+      width: 35,
     },
   },
   {

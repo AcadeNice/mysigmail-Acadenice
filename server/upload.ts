@@ -64,13 +64,13 @@ const avatarUpload = multer({
   },
 })
 
-/* ---------- Баннер (фиксированное имя) ---------- */
+/* ---------- banner (fixed name) ---------- */
 /* memoryStorage */
 const bannerUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    // Разрешим только PNG для простоты (можно расширить при необходимости)
+    // only png
     const ok = file.mimetype === 'image/png'
     cb(null, ok)
   },
@@ -79,7 +79,7 @@ const bannerUpload = multer({
 export function makeProtectedUploadRoutes(requireUser: any) {
   const router = Router()
 
-  // Инфо по аватару
+  // avatar info
   router.get('/api/file-info', requireUser, (req: Request, res: Response) => {
     const base = sanitizeBase(String(req.query.base || ''))
     if (!base) {
@@ -97,7 +97,7 @@ export function makeProtectedUploadRoutes(requireUser: any) {
     return res.json({ exists: true, filename: hit, mtime: stat.mtimeMs })
   })
 
-  // Загрузка аватарки
+  // avatar upload
   router.post('/api/upload', requireUser, avatarUpload.single('file'), (req: any, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file or unsupported type' })
@@ -107,9 +107,9 @@ export function makeProtectedUploadRoutes(requireUser: any) {
     return res.json({ ok: true, filename: req.file.filename, mtime: stat.mtimeMs })
   })
 
-  router.get('/api/banner-info', (_req: Request, res: Response) => {
+  router.get('/api/banner-info', (_req, res) => {
+    const p = path.join(publicAssetsDir, 'acadenice-banner.png')
     try {
-      const p = path.join(publicAssetsDir, 'acadenice-banner.png')
       if (!fs.existsSync(p)) {
         return res.json({ exists: false })
       }
@@ -117,7 +117,7 @@ export function makeProtectedUploadRoutes(requireUser: any) {
       const stat = fs.statSync(p)
       return res.json({
         exists: true,
-        path: ' public/assets/acadenice-banner.png',
+        path: '/assets/acadenice-banner.png',
         mtime: stat.mtimeMs,
       })
     } catch {
@@ -136,13 +136,13 @@ export function makeProtectedUploadRoutes(requireUser: any) {
         }
 
         const target = path.join(publicAssetsDir, 'acadenice-banner.png')
-        // Перезаписываем файл
+        // rewriting file
         fs.writeFileSync(target, req.file.buffer)
         const stat = fs.statSync(target)
 
         return res.json({
           ok: true,
-          path: 'public/assets/acadenice-banner.png',
+          path: '/assets/acadenice-banner.png',
           mtime: stat.mtimeMs,
         })
       } catch (e: any) {
