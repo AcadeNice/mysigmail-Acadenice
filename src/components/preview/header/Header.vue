@@ -1,9 +1,28 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import UilAngleDown from '~icons/uil/angle-down'
+import UilExclamationTriangle from '~icons/uil/exclamation-triangle'
+import UilGoogle from '~icons/uil/google'
+
+import { useSignatures } from '@/composables/signatures/useSignatures'
+import { useAccess } from '@/composables/useAccess'
+import { useCopySignature } from '@/composables/useCopySignature'
+import { useSonner } from '@/composables/useSonner'
+
+// Копирование / размер HTML
 const { isHtmlLarge, onCopyHTML, onCopySelect } = useCopySignature()
+// JSON (импорт/экспорт подписи)
 const { downloadJSON, installed, uploadJSON } = useSignatures()
+// Тосты
 const { sonner } = useSonner()
+// Роль пользователя (guest / user)
+const { isUser } = useAccess()
 
 const inputRef = ref<HTMLInputElement>()
+const loadingGmail = ref(false)
+const disconnectingGmail = ref(false)
+// Подключён ли сейчас Google (есть ли валидные креды на бэке)
+const gmailConnected = ref(false)
 
 function onDownload() {
   downloadJSON(installed.value)
@@ -11,11 +30,9 @@ function onDownload() {
 
 function onFileSelected(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-
   if (!file) return
 
   const reader = new FileReader()
-
   reader.onload = async () => {
     await uploadJSON(reader.result as string)
     sonner({
@@ -24,8 +41,115 @@ function onFileSelected(e: Event) {
       description: 'Signature uploaded successfully',
     })
   }
-
   reader.readAsText(file)
+}
+
+// Статус интеграции Gmail при загрузке
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/gmail/status', { credentials: 'include' })
+    if (!res.ok) return
+    const data = await res.json()
+    gmailConnected.value = !!data?.connected
+  } catch {
+    gmailConnected.value = false
+  }
+})
+
+// Отправка текущей подписи в Gmail
+async function addToGmail() {
+  const el = document.querySelector('[data-slot="signature"]') as HTMLElement | null
+  if (!el) {
+    sonner({
+      title: 'Oops!',
+      type: 'error',
+      description: 'Aucune signature à synchroniser.',
+    })
+    return
+  }
+
+  const html = el.outerHTML.replace(/<!--v-if-->/g, '')
+
+  loadingGmail.value = true
+  try {
+    const res = await fetch('/api/gmail/signature', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html }),
+    })
+
+    let data: any = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+
+    // Токен отсутствует или протух → просим заново войти через Google
+    if (res.status === 401 && (data?.error === 'google_auth_required' || !data)) {
+      window.location.href = '/api/gmail/auth'
+      return
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.error || 'Erreur lors de la synchronisation.')
+    }
+
+    gmailConnected.value = true
+
+    sonner({
+      title: 'Succès',
+      type: 'success',
+      description: 'Signature synchronisée avec succès avec Gmail.',
+    })
+  } catch (e: any) {
+    sonner({
+      title: 'Erreur',
+      type: 'error',
+      description: e?.message || 'Erreur de synchronisation.',
+    })
+  } finally {
+    loadingGmail.value = false
+  }
+}
+
+// Явная деавторизация Google
+async function disconnectGoogle() {
+  disconnectingGmail.value = true
+  try {
+    const res = await fetch('/api/gmail/disconnect', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    let data: any = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.error || 'Erreur lors de la déconnexion.')
+    }
+
+    gmailConnected.value = false
+
+    sonner({
+      title: 'Google déconnecté',
+      type: 'success',
+      description: 'Le compte Google a été déconnecté pour la synchronisation.',
+    })
+  } catch (e: any) {
+    sonner({
+      title: 'Erreur',
+      type: 'error',
+      description: e?.message || 'Impossible de déconnecter Google.',
+    })
+  } finally {
+    disconnectingGmail.value = false
+  }
 }
 </script>
 
@@ -39,6 +163,27 @@ function onFileSelected(e: Event) {
       >
         Upload JSON
       </UiButton>
+
+      <!-- Add to Gmail -->
+      <UiButton
+        variant="outline"
+        :disabled="loadingGmail"
+        @click="addToGmail"
+      >
+        <UilGoogle class="mr-1 w-4 h-4" />
+        {{ loadingGmail ? 'Gmail…' : 'Add to Gmail' }}
+      </UiButton>
+
+      <!-- Déconnecter Google — только если реально подключён -->
+      <UiButton
+        v-if="gmailConnected"
+        variant="ghost"
+        :disabled="disconnectingGmail"
+        @click="disconnectGoogle"
+      >
+        {{ disconnectingGmail ? 'Déconnexion…' : 'Déconnecter Google' }}
+      </UiButton>
+
       <UiDropdownMenu>
         <UiDropdownMenuTrigger as-child>
           <UiButton variant="outline">
@@ -61,6 +206,7 @@ function onFileSelected(e: Event) {
       </UiDropdownMenu>
     </div>
   </div>
+
   <div
     v-if="isHtmlLarge"
     class="mt-3"
@@ -78,6 +224,7 @@ function onFileSelected(e: Event) {
       </UiAlertDescription>
     </UiAlert>
   </div>
+
   <input
     ref="inputRef"
     style="display: none"

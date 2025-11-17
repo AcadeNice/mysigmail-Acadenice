@@ -30,7 +30,7 @@ function toBaseName(input: string): string {
   return s
 }
 
-/* ------------ где храним значение картинки в модели ------------ */
+/* ------------ where the filename is stored in the model ------------ */
 const fileName = computed<string>({
   get: () => installed.value?.tools.basic[0].value || '',
   set: (v: string) => {
@@ -38,12 +38,12 @@ const fileName = computed<string>({
   },
 })
 
-/* ------------ URL режима ------------ */
+/* ------------ URL mode ------------ */
 const imageUrl = ref('')
 
 const isHttpUrl = (s: string) => /^https?:\/\/\S+/i.test(s.trim())
 
-// инициализируем imageUrl из текущего значения, если там уже был URL
+// initialize imageUrl from the current value if it already contains a URL
 watch(
   () => fileName.value,
   (v) => {
@@ -52,14 +52,14 @@ watch(
   { immediate: true },
 )
 
-// когда пользователь меняет поле URL — сразу пишем в модель
+// write into the model when user changes the URL field
 watch(imageUrl, (v) => {
   const t = v.trim()
   if (t) fileName.value = t
-  else if (isHttpUrl(fileName.value)) fileName.value = '' // если очищают URL — чистим модель, чтобы не висел старый URL
+  else if (isHttpUrl(fileName.value)) fileName.value = '' // clear model if they cleared the URL
 })
 
-/* ------------ вычисления для загрузчика ------------ */
+/* ------------ computations for uploader ------------ */
 const fullName = ref(readFullName())
 watch(
   () => readFullName(),
@@ -74,27 +74,37 @@ const existingFile = ref<string>('')
 const checking = ref(false)
 let t: number | undefined
 
-// не ходим в /api/file-info для гостей; и НЕ ходим, если включён URL-режим
+// controller for aborting in-flight file-info requests to avoid race conditions
+const fileInfoController = ref<AbortController | null>(null)
+
+// do not fetch /api/file-info for guests; and do not fetch if URL mode is active
 watch(
   [baseName, isUser, imageUrl],
   async ([b, user, url]) => {
-    // если сейчас выбран URL — не проверяем файловую систему
+    // if URL is selected – skip file system check
     if (isHttpUrl(url)) {
       existingFile.value = ''
       checking.value = false
       return
     }
 
-    fileName.value ||= '' // убедимся, что строка
+    fileName.value ||= '' // ensure string
     existingFile.value = ''
     if (!user || !b) return
 
+    // clear previous timer and abort previous request if any
     clearTimeout(t)
+    if (fileInfoController.value) {
+      fileInfoController.value.abort()
+      fileInfoController.value = null
+    }
     t = window.setTimeout(async () => {
       checking.value = true
+      fileInfoController.value = new AbortController()
       try {
         const res = await fetch(`/api/file-info?base=${encodeURIComponent(b)}`, {
           credentials: 'include',
+          signal: fileInfoController.value.signal,
         })
         if (!res.ok) {
           if (res.status === 401 || res.status === 403) return
@@ -103,25 +113,34 @@ watch(
         const data = await res.json()
         if (data?.exists && data?.filename) {
           existingFile.value = data.filename
-          // ВАЖНО: не затираем URL, если он был; записываем файл, только если URL пуст
+          // important: do not overwrite URL if one was already selected
           if (!isHttpUrl(fileName.value)) fileName.value = data.filename
           if (data.mtime) imageVersion.value = Math.floor(data.mtime)
         } else {
           if (!isHttpUrl(fileName.value)) fileName.value = ''
           imageVersion.value = 0
         }
-      } catch {
-        if (!isHttpUrl(fileName.value)) fileName.value = ''
-        imageVersion.value = 0
+      } catch (e: any) {
+        // ignore abort errors; show feedback for network/other failures
+        if (e?.name !== 'AbortError') {
+          if (!isHttpUrl(fileName.value)) fileName.value = ''
+          imageVersion.value = 0
+          sonner({
+            title: 'Erreur',
+            type: 'error',
+            description: 'Une erreur est survenue lors de la vérification du fichier.',
+          })
+        }
       } finally {
         checking.value = false
+        fileInfoController.value = null
       }
     }, 200)
   },
   { immediate: true },
 )
 
-/* ------------ upload только для isUser ------------ */
+/* ------------ upload only for isUser ------------ */
 function extFromMime(m: string): 'jpg' | 'png' | 'gif' {
   if (m === 'image/png') return 'png'
   if (m === 'image/gif') return 'gif'
@@ -130,18 +149,18 @@ function extFromMime(m: string): 'jpg' | 'png' | 'gif' {
 
 async function onBeforeUpload(blob: Blob, mime: string) {
   if (!isUser.value) return
-  if (isHttpUrl(imageUrl.value)) return // если выбран URL — не даём грузить файл, чтобы не путать
+  if (isHttpUrl(imageUrl.value)) return // do not allow upload if URL mode is selected
   if (!baseName.value) {
     sonner({
-      title: 'Full Name is required',
+      title: 'Nom complet requis',
       type: 'default',
-      description: 'Please fill the Full Name field first.',
+      description: 'Veuillez renseigner le champ Nom complet en premier.',
     })
     throw new Error('no-full-name')
   }
   if (existingFile.value) {
     // eslint-disable-next-line no-alert
-    const ok = window.confirm('An image for this user already exists. Replace it?')
+    const ok = window.confirm('Une image pour cet utilisateur existe déjà. La remplacer ?')
     if (!ok) throw new Error('cancelled')
   }
 
@@ -160,7 +179,7 @@ async function onBeforeUpload(blob: Blob, mime: string) {
   existingFile.value = data.filename
   if (data.mtime) imageVersion.value = Math.floor(data.mtime)
 
-  sonner({ title: 'Success', type: 'success', description: 'Image saved.' })
+  sonner({ title: 'Succès', type: 'success', description: 'Image enregistrée.' })
 }
 
 function onUploaded(nameOrBlob: any) {
@@ -168,7 +187,7 @@ function onUploaded(nameOrBlob: any) {
   fileName.value = String(nameOrBlob)
 }
 
-/* ------------ удобный флаг: можно ли показывать аплоад ------------ */
+/* ------------ convenient flag: can upload ------------ */
 const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
 </script>
 
@@ -180,7 +199,7 @@ const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
         description="Collez un lien public vers l’image ou, si vous êtes connecté, téléversez un fichier."
       >
         <div class="grid gap-2">
-          <!-- 1) URL (для всех) -->
+          <!-- 1) URL (for everyone) -->
           <div class="flex items-center gap-2">
             <UiInput
               v-model="imageUrl"
@@ -191,10 +210,10 @@ const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
             <span class="text-xs text-muted-foreground shrink-0"> URL (prioritaire) </span>
           </div>
 
-          <!-- 2) Upload (только для user и только если не выбран URL) -->
+          <!-- 2) Upload (only for user and only if no URL is selected) -->
           <div
             v-if="canUpload"
-            class="flex items-center gap-2"
+            lass="flex items-center gap-2"
           >
             <UiUpload
               :disabled="!baseName || checking || loadingRole"
@@ -203,12 +222,12 @@ const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
               @uploaded="onUploaded"
             />
             <span class="text-xs text-muted-foreground">
-              File name:
+              Nom de fichier :
               <strong>{{ baseName ? existingFile || `${baseName}.*` : '—' }}</strong>
             </span>
           </div>
 
-          <!-- 3) Пояснение для гостя / когда URL активен -->
+          <!-- 3) Explanation for guest / when URL is active -->
           <div
             v-else
             class="text-xs text-muted-foreground"

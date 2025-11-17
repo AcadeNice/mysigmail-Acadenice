@@ -37,6 +37,14 @@ const routes = [
       title: 'Templates',
     },
   },
+  // New route for pixel analytics
+  {
+    path: '/analytics',
+    component: () => import('@/views/PixelAnalytics.vue'),
+    meta: {
+      title: 'Pixel analytics',
+    },
+  },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/',

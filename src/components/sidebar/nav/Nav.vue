@@ -1,11 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
+import { useAccess } from '@/composables/useAccess'
+
 import { main } from './navigation'
+
+const { isUser } = useAccess()
+
+// скрываем пункты с requiresUser для гостя
+const navItems = computed(() =>
+  main.filter((item: any) => {
+    if (item.requiresUser && !isUser.value) return false
+    return true
+  }),
+)
 </script>
 
 <template>
   <div data-sidebar-nav>
     <template
-      v-for="i in main"
+      v-for="i in navItems"
       :key="i.path"
     >
       <a

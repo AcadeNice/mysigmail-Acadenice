@@ -1,6 +1,5 @@
 module.exports = {
   root: true,
-  // если стояла "extends: ['@antfu']" – оставь, но переопредели ниже
   extends: ['@antfu'],
   rules: {
     // стилистика – выключаем

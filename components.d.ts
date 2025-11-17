@@ -108,6 +108,7 @@ declare module 'vue' {
     UilAngleDown: typeof import('~icons/uil/angle-down')['default']
     UilElipsisDoubleVAlt: typeof import('~icons/uil/elipsis-double-v-alt')['default']
     UilExclamationTriangle: typeof import('~icons/uil/exclamation-triangle')['default']
+    UilGoogle: typeof import('~icons/uil/google')['default']
     UilImage: typeof import('~icons/uil/image')['default']
     UilPen: typeof import('~icons/uil/pen')['default']
     UilPlus: typeof import('~icons/uil/plus')['default']

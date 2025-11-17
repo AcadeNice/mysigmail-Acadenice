@@ -59,21 +59,23 @@ const resolvedSrc = computed(() => {
 
 <template>
   <table width="auto">
-    <tr>
-      <td :style="tdStyle">
-        <img
-          :width="size"
-          :src="resolvedSrc || placeholder"
-          :style="{
-            maxWidth: `${size}px`,
-            width: `${size}px`,
-            borderRadius: `${roundness}px`,
-            display: 'block',
-          }"
-          border="0"
-          alt="avatar"
-        >
-      </td>
-    </tr>
+    <tbody>
+      <tr>
+        <td :style="tdStyle">
+          <img
+            :width="size"
+            :src="resolvedSrc || placeholder"
+            :style="{
+              maxWidth: `${size}px`,
+              width: `${size}px`,
+              borderRadius: `${roundness}px`,
+              display: 'block',
+            }"
+            border="0"
+            alt="avatar"
+          >
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>

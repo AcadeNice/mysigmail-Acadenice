@@ -1,4 +1,4 @@
-<!-- src/App.vue -->
+<!-- Modified src/App.vue -->
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import 'vue-sonner/style.css'
@@ -6,11 +6,15 @@ import { Toaster } from 'vue-sonner'
 
 import AuthDialog from '@/components/AuthDialog.vue'
 import { useAccess } from '@/composables/useAccess'
+// Import shared validation patterns instead of redefining regexes locally.  This
+// ensures consistent validation between client and server and avoids
+// duplication.
+import { EMAIL_REGEX, FR_PHONE_REGEX } from '@/utils/validators.ts'
 
 const { continueAsGuest, loadingRole, unlocked } = useAccess()
 const showGate = computed(() => !unlocked.value)
 
-/* ---------- theme: auto follow system ---------- */
+/* ---------- theme: follow system preference ---------- */
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 function handleTheme(e: MediaQueryListEvent) {
   isDark.value = e.matches
@@ -28,18 +32,11 @@ onBeforeUnmount(() => {
 const nameInput = ref('')
 const emailInput = ref('')
 const phoneInput = ref('')
-const enterpriseInput = ref('') // optionnel
+const enterpriseInput = ref('') // optional
 
 /* ---------- validation ---------- */
-// email: простой RFC-сейф
-const emailRx = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
-
-// Téléphone FR:
-// - 0X XX XX XX XX
-// - +33 X XX XX XX XX
-// Допускаем пробелы, точки, дефисы как разделители.
-const frPhoneRx = /^(?:\+33\s?[1-9](?:[\s.-]?\d{2}){4}|0[1-9](?:[\s.-]?\d{2}){4})$/
-
+// Track which fields have been interacted with.  This controls when
+// validation errors are displayed.
 const touched = {
   name: ref(false),
   email: ref(false),
@@ -52,29 +49,29 @@ const nameError = computed(() =>
 const emailError = computed(() => {
   if (!touched.email.value) return ''
   const v = emailInput.value.trim()
-  if (!v) return 'E-mail requis'
-  return emailRx.test(v) ? '' : 'E-mail invalide'
+  if (!v) return 'E‑mail requis'
+  return EMAIL_REGEX.test(v) ? '' : 'E‑mail invalide'
 })
 const phoneNormalized = computed(() => phoneInput.value.trim())
 const phoneError = computed(() => {
   if (!touched.phone.value) return ''
   const v = phoneNormalized.value
   if (!v) return 'Téléphone requis'
-  return frPhoneRx.test(v) ? '' : 'Format téléphone invalide'
+  return FR_PHONE_REGEX.test(v) ? '' : 'Format téléphone invalide'
 })
 
 const formValid = computed(
   () =>
     !!nameInput.value.trim()
-    && emailRx.test(emailInput.value.trim())
-    && frPhoneRx.test(phoneNormalized.value),
+    && EMAIL_REGEX.test(emailInput.value.trim())
+    && FR_PHONE_REGEX.test(phoneNormalized.value),
 )
 
 /* ---------- submit ---------- */
 const saving = ref(false)
 const saveErr = ref('')
 async function proceedAsGuest() {
-  // Поля теперь обязательные
+  // Mark all fields as touched so validation messages show when missing
   touched.name.value = true
   touched.email.value = true
   touched.phone.value = true
@@ -91,7 +88,7 @@ async function proceedAsGuest() {
         name: nameInput.value.trim(),
         email: emailInput.value.trim(),
         phone: phoneNormalized.value,
-        enterprise: enterpriseInput.value.trim() || undefined, // optionnel
+        enterprise: enterpriseInput.value.trim() || undefined,
       }),
     })
   } catch (e: any) {
@@ -103,7 +100,7 @@ async function proceedAsGuest() {
   continueAsGuest()
 }
 
-/* ---------- staff login (оставляем старый модал как есть) ---------- */
+/* ---------- staff login ---------- */
 function openStaffLogin() {
   window.dispatchEvent(new CustomEvent('open-auth-dialog'))
 }
@@ -127,24 +124,28 @@ function markTouched(field: 'name' | 'email' | 'phone') {
       :class="isDark ? 'gate-overlay--dark' : 'gate-overlay--light'"
       aria-modal="true"
       role="dialog"
+      aria-labelledby="guest-gate-title"
+      tabindex="-1"
     >
       <div
         class="w-[min(92vw,620px)] rounded-2xl p-6 shadow-2xl"
         :class="isDark ? 'gate-card--dark' : 'gate-card--light'"
       >
-        <!-- Заголовок -->
-        <h2 class="text-2xl font-semibold mb-1">
+        <!-- Heading -->
+        <h2
+          id="guest-gate-title"
+          class="text-2xl font-semibold mb-1"
+        >
           AcadéNice — Signature Utility
         </h2>
 
-        <!-- Дисклеймер FR -->
+        <!-- Disclaimer (FR) -->
         <p
           class="text-sm mb-4"
           :class="isDark ? 'text-dark-muted' : 'text-light-muted'"
         >
           Vos données seront utilisées <strong>uniquement</strong> dans le cadre d’AcadéNice et ne
-          seront <strong>jamais</strong> partagées avec des tiers.
-          <br>
+          seront <strong>jamais</strong> partagées avec des tiers.<br>
           <span class="inline-block mt-1">Vous pouvez continuer pour utiliser cet outil gratuitement.</span>
           <span
             class="block mt-1 text-[11px]"
@@ -155,7 +156,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           </span>
         </p>
 
-        <!-- Форма гостя -->
+        <!-- Guest form -->
         <div class="grid gap-3">
           <div>
             <UiInput
@@ -222,7 +223,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           </div>
         </div>
 
-        <!-- Большая кнопка -->
+        <!-- Big button -->
         <UiButton
           class="mt-5 w-full h-11 text-base"
           :disabled="loadingRole || saving || !formValid"
@@ -231,7 +232,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           Continuer en invité
         </UiButton>
 
-        <!-- Ошибка -->
+        <!-- Error -->
         <p
           v-if="saveErr"
           class="mt-2 text-sm text-red-500"
@@ -239,7 +240,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           {{ saveErr }}
         </p>
 
-        <!-- Линк для staff -->
+        <!-- Staff link -->
         <div class="mt-6 text-[12px] flex items-center justify-center">
           <button
             type="button"
@@ -253,9 +254,8 @@ function markTouched(field: 'name' | 'email' | 'phone') {
       </div>
     </div>
 
-    <!-- Модал логина персонала (как есть) -->
+    <!-- Staff login modal (unchanged) -->
     <AuthDialog />
-
     <Toaster />
   </div>
 </template>
@@ -267,7 +267,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
   backdrop-filter: blur(6px) saturate(110%);
 }
 .gate-overlay--dark {
-  /* чуть ярче и «пастельнее», чем просто чёрный */
+  /* Slightly brighter and more pastel than plain black */
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(110, 124, 255, 0.18), transparent 60%),
     radial-gradient(1000px 500px at 90% 20%, rgba(255, 132, 153, 0.16), transparent 55%),

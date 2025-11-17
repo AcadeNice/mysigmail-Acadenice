@@ -65,7 +65,7 @@ const avatarUpload = multer({
 })
 
 /* ---------- Баннер (фиксированное имя) ---------- */
-/* Здесь используем memoryStorage, чтобы всегда писать ровно acadenice-banner.png */
+/* memoryStorage */
 const bannerUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -107,7 +107,6 @@ export function makeProtectedUploadRoutes(requireUser: any) {
     return res.json({ ok: true, filename: req.file.filename, mtime: stat.mtimeMs })
   })
 
-  /* ---------- Баннер: фиксированный путь public/assets/acadenice-banner.png ---------- */
   router.get('/api/banner-info', (_req: Request, res: Response) => {
     try {
       const p = path.join(publicAssetsDir, 'acadenice-banner.png')
@@ -116,7 +115,11 @@ export function makeProtectedUploadRoutes(requireUser: any) {
       }
 
       const stat = fs.statSync(p)
-      return res.json({ exists: true, path: '/assets/acadenice-banner.png', mtime: stat.mtimeMs })
+      return res.json({
+        exists: true,
+        path: ' public/assets/acadenice-banner.png',
+        mtime: stat.mtimeMs,
+      })
     } catch {
       return res.json({ exists: false })
     }
@@ -139,7 +142,7 @@ export function makeProtectedUploadRoutes(requireUser: any) {
 
         return res.json({
           ok: true,
-          path: '/assets/acadenice-banner.png',
+          path: 'public/assets/acadenice-banner.png',
           mtime: stat.mtimeMs,
         })
       } catch (e: any) {
