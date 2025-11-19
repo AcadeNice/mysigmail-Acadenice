@@ -270,12 +270,12 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             Conditions d’utilisation
           </RouterLink>
         </div>
-
-        <!-- Staff login modal (unchanged) -->
-        <AuthDialog />
-        <Toaster />
       </div>
     </div>
+
+    <!-- ВАЖНО: глобальные компоненты, всегда в DOM -->
+    <AuthDialog />
+    <Toaster position="bottom-right" />
   </div>
 </template>
 
