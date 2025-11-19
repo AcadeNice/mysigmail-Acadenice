@@ -23,7 +23,9 @@ const app = express()
 
 // configure CORS for development; the second CORS configuration later
 // overrides this one with FRONT_ORIGIN in production
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'http://localhost:5173'
+
+app.use(cors({ origin: FRONT_ORIGIN, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -34,8 +36,6 @@ const JWT_SECRET = process.env.JWT_SECRET
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 if (!JWT_SECRET) throw new Error('Missing JWT_SECRET environment variable')
 if (!ADMIN_PASSWORD) throw new Error('Missing ADMIN_PASSWORD environment variable')
-
-const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'http://localhost:5173'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

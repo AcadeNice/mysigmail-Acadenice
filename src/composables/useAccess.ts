@@ -38,6 +38,7 @@ async function login(password: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
   })
+
   if (!res.ok) {
     let msg = 'Login failed'
     try {
@@ -45,12 +46,28 @@ async function login(password: string) {
     } catch {}
     throw new Error(msg)
   }
-  await refreshRole()
-  // для user гейт не нужен, чистим флаг гостя
+
+  // сразу читаем ответ логина
+  let data: any = null
+  try {
+    data = await res.json()
+  } catch {
+    data = null
+  }
+
+  // МГНОВЕННО считаем пользователя user, если бек так сказал
+  role.value = data?.role === 'user' ? 'user' : 'guest'
+
+  // гейт для user не нужен, чистим флаг гостя
   try {
     localStorage.removeItem(GUEST_OK_KEY)
   } catch {}
   guestContinued.value = false
+
+  // а статус можно обновить в фоне, но не ломать результат логина
+  refreshRole().catch(() => {
+    // если тут упадёт — не трогаем role.value
+  })
 }
 
 async function logout() {

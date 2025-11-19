@@ -6,19 +6,35 @@ function normalize(u: string) {
 }
 
 export function useOrigins() {
-  const publicOrigin
-    = (import.meta.env.VITE_PUBLIC_ORIGIN as string | undefined)?.trim()
-      || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173')
+  const isDev = import.meta.env.DEV === true
 
-  let api = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.trim()
-  if (!api) {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
-    api = origin.replace(':5173', ':3001')
+  // base origin
+  const browserOrigin
+    = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
+
+  // public origin
+  const publicOriginRaw
+    = (import.meta.env.VITE_PUBLIC_ORIGIN as string | undefined)?.trim() || browserOrigin
+  const publicOrigin = normalize(publicOriginRaw)
+
+  // API origin:
+  // 1) VITE_API_ORIGIN — using it;
+  // 2) (reverse proxy /api → Node).
+  let apiOriginRaw = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.trim()
+
+  if (!apiOriginRaw) {
+    if (isDev) {
+      apiOriginRaw = browserOrigin.replace(':5173', ':3001')
+    } else {
+      apiOriginRaw = publicOrigin
+    }
   }
 
+  const apiOrigin = normalize(apiOriginRaw)
+
   return {
-    publicOrigin: computed(() => normalize(publicOrigin)),
-    apiOrigin: computed(() => normalize(api!)),
-    isDev: computed(() => import.meta.env.DEV === true),
+    publicOrigin: computed(() => publicOrigin),
+    apiOrigin: computed(() => apiOrigin),
+    isDev: computed(() => isDev),
   }
 }

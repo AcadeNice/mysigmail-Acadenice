@@ -1,23 +1,44 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 
-defineOptions({
-  name: 'CguPage',
-})
+defineOptions({ name: 'CguPage' })
 
 const lang = ref<'fr' | 'en'>('fr')
+const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 
 function toggleLang() {
   lang.value = lang.value === 'fr' ? 'en' : 'fr'
 }
+
+function handleTheme(e: MediaQueryListEvent) {
+  isDark.value = e.matches
+}
+
+onMounted(() => {
+  const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
+  mq?.addEventListener?.('change', handleTheme)
+})
+
+onBeforeUnmount(() => {
+  const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
+  mq?.removeEventListener?.('change', handleTheme)
+})
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-4 py-8 relative">
+  <div
+    class="max-w-4xl mx-auto px-4 py-8 relative"
+    :class="isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'"
+  >
     <!-- change lang -->
     <button
       type="button"
-      class="fixed left-2 top-4 h-9 w-9 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs font-semibold bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-slate-800 transition z-50"
+      class="fixed left-2 top-4 h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition z-50 border"
+      :class="
+        isDark
+          ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
+          : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
+      "
       @click="toggleLang"
     >
       {{ lang === 'fr' ? 'FR' : 'EN' }}
