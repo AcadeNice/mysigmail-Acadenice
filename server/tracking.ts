@@ -1,10 +1,30 @@
+// server/tracking.ts
 import { Router } from 'express'
+import jwt from 'jsonwebtoken'
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 
 const router = Router()
+
+// ---- auth helper ----
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error('Missing JWT_SECRET environment variable for tracking router')
+}
+
+function requireUser(req: any, res: any, next: any) {
+  try {
+    const token = req.cookies?.access_token
+    if (!token) return res.status(401).json({ error: 'Unauthorized' })
+    const payload = jwt.verify(token, JWT_SECRET!) as any
+    if (payload.role !== 'user') return res.status(403).json({ error: 'Forbidden' })
+    next()
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+}
 
 // Folder and file for pixel logs
 const privateDir = path.join(process.cwd(), '.private')
@@ -14,13 +34,13 @@ const logFile = path.join(privateDir, 'opens.log')
 // Precomputed 1×1 GIF (base64)
 const GIF_1x1 = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64')
 
-// Pixel endpoint — send a 1×1 GIF and append an event to the log
+// ---------------- PUBLIC ENDPOINT: PIXEL ----------------
 router.get('/pixel.gif', (req, res) => {
   const entry = {
     ts: Date.now(),
     ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     ua: req.get('user-agent') || '',
-    // All tags passed in query: sender, sig, t, etc.
+    // All tags passed in query: sender, sig, t, rcpt, etc.
     q: req.query,
   }
 
@@ -41,8 +61,10 @@ router.get('/pixel.gif', (req, res) => {
   res.status(200).end(GIF_1x1)
 })
 
+// ---------------- PROTECTED ENDPOINTS: LOG + STATS ----------------
+
 // Simple log viewer via API (last N lines)
-router.get('/api/pixel-log', (req, res) => {
+router.get('/api/pixel-log', requireUser, (req, res) => {
   const limitRaw = Number(req.query.limit ?? 200)
   const limit = Math.min(limitRaw || 200, 2000)
 
@@ -72,13 +94,10 @@ router.get('/api/pixel-log', (req, res) => {
 
 /**
  * Aggregated statistics endpoint.  Returns total number of pixel hits and
- * aggregated counts by date (YYYY-MM-DD) and by signature ID (query
- * parameter `sig`).  An optional `limit` query parameter controls how many
- * lines of the log are considered, with a maximum of 20000.  Unknown
- * signatures (missing `sig` parameter) are grouped under the `unknown`
- * key.
+ * aggregated counts by date (YYYY-MM-DD), by signature ID (`sig`) and by
+ * recipient (`rcpt`).  Access is restricted to authenticated staff.
  */
-router.get('/api/pixel-stats', (req, res) => {
+router.get('/api/pixel-stats', requireUser, (req, res) => {
   const limitRaw = Number(req.query.limit ?? 20000)
   const limit = Math.min(limitRaw || 20000, 20000)
   try {

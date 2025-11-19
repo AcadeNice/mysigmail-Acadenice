@@ -28,7 +28,7 @@ declare module 'vue' {
     HeaderColorMode: typeof import('./src/components/header/ColorMode.vue')['default']
     LayoutsDefault: typeof import('./src/components/layouts/Default.vue')['default']
     OptionsForm: typeof import('./src/components/options/Form.vue')['default']
-    PagesCguPage: typeof import('./src/components/pages/CguPage.vue')['default']
+    PagesCguPage: typeof import('./src/components/CguPage.vue')['default']
     Preview: typeof import('./src/components/preview/Preview.vue')['default']
     PreviewFooter: typeof import('./src/components/preview/Footer.vue')['default']
     PreviewHeader: typeof import('./src/components/preview/header/Header.vue')['default']
