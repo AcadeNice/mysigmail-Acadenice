@@ -60,8 +60,8 @@ const nameError = computed(() =>
 const emailError = computed(() => {
   if (!touched.email.value) return ''
   const v = emailInput.value.trim()
-  if (!v) return 'E‑mail requis'
-  return EMAIL_REGEX.test(v) ? '' : 'E‑mail invalide'
+  if (!v) return 'E-mail requis'
+  return EMAIL_REGEX.test(v) ? '' : 'E-mail invalide'
 })
 const phoneNormalized = computed(() => phoneInput.value.trim())
 const phoneError = computed(() => {
@@ -82,16 +82,16 @@ const formValid = computed(
 const saving = ref(false)
 const saveErr = ref('')
 async function proceedAsGuest() {
-  // Mark all fields as touched so validation messages show when missing
   touched.name.value = true
   touched.email.value = true
   touched.phone.value = true
   if (!formValid.value) return
 
+  saving.value = true
+  saveErr.value = ''
+
   try {
-    saving.value = true
-    saveErr.value = ''
-    await fetch('/api/guest/register', {
+    const res = await fetch('/api/guest/register', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -102,13 +102,28 @@ async function proceedAsGuest() {
         enterprise: enterpriseInput.value.trim() || undefined,
       }),
     })
+
+    let data: any = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+
+    // if there is no ok:true – no guest access
+    if (!res.ok || data?.ok !== true) {
+      saveErr.value = data?.error || 'Erreur lors de l’enregistrement (serveur).'
+      return
+    }
+
+    // opens app
+    continueAsGuest()
   } catch (e: any) {
-    saveErr.value = e?.message || 'Erreur lors de l’enregistrement.'
+    // net/other errors
+    saveErr.value = e?.message || 'Erreur lors de l’enregistrement (réseau).'
   } finally {
     saving.value = false
   }
-
-  continueAsGuest()
 }
 
 /* ---------- staff login ---------- */
