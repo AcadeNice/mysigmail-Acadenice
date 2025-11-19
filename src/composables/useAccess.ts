@@ -5,13 +5,12 @@ type Role = 'guest' | 'user'
 const role = ref<Role>('guest')
 const loadingRole = ref(true)
 
-/** ключ для localStorage */
+/** localStorage key */
 const GUEST_OK_KEY = 'acadenice_guest_ok'
 
-/** было: ref(false) */
 const guestContinued = ref<boolean>(false)
 
-/** подхватываем сохранённое значение при старте */
+/** getting saved value */
 try {
   guestContinued.value = localStorage.getItem(GUEST_OK_KEY) === '1'
 } catch {
@@ -47,7 +46,7 @@ async function login(password: string) {
     throw new Error(msg)
   }
 
-  // сразу читаем ответ логина
+  // reading login answer
   let data: any = null
   try {
     data = await res.json()
@@ -55,7 +54,7 @@ async function login(password: string) {
     data = null
   }
 
-  // МГНОВЕННО считаем пользователя user, если бек так сказал
+  // giving user rights if back said so
   role.value = data?.role === 'user' ? 'user' : 'guest'
 
   // гейт для user не нужен, чистим флаг гостя
@@ -64,16 +63,16 @@ async function login(password: string) {
   } catch {}
   guestContinued.value = false
 
-  // а статус можно обновить в фоне, но не ломать результат логина
+  // setting status in background
   refreshRole().catch(() => {
-    // если тут упадёт — не трогаем role.value
+    // fallback — not touching role.value
   })
 }
 
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
   role.value = 'guest'
-  // после явного логаута — снова показываем гейт
+  // gate again
   guestContinued.value = false
   try {
     localStorage.removeItem(GUEST_OK_KEY)
@@ -84,7 +83,7 @@ function setRole(next: Role) {
   role.value = next
 }
 
-/** <- ВАЖНО: сохраняем маркер в localStorage */
+/** <- saving marker in localStorage */
 function continueAsGuest() {
   guestContinued.value = true
   try {

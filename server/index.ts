@@ -1,3 +1,4 @@
+// server/index.ts
 import 'dotenv/config'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -12,26 +13,21 @@ import { fileURLToPath } from 'node:url'
 import { EMAIL_REGEX, FR_PHONE_REGEX } from '../src/utils/validators'
 import gmailRouter from './gmail'
 import trackingRouter from './tracking'
-// Gmail integration router handles OAuth and signature updates
 import { makeProtectedUploadRoutes } from './upload'
-
-// Import shared validation patterns.  Using a shared module ensures the client
-// and server perform identical checks for email and French phone numbers.
-// The path is relative to the project root; adjust if your build config differs.
 
 const app = express()
 
-// configure CORS for development; the second CORS configuration later
-// overrides this one with FRONT_ORIGIN in production
+// Single CORS configuration for both dev and prod.
+// FRONT_ORIGIN should be set in the environment in production
+// (e.g. https://sign.a3n.fr). In dev we fall back to Vite default.
 const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'http://localhost:5173'
-
 app.use(cors({ origin: FRONT_ORIGIN, credentials: true }))
+
 app.use(express.json())
 app.use(cookieParser())
 
-// Require secrets to be provided via environment variables.  Do not fall back
-// to insecure defaults.  If these are missing the server will crash at
-// startup rather than silently using weak secrets.
+// Require secrets via environment variables. If they are missing, crash early
+// instead of silently using weak defaults.
 const JWT_SECRET = process.env.JWT_SECRET
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 if (!JWT_SECRET) throw new Error('Missing JWT_SECRET environment variable')
@@ -40,26 +36,26 @@ if (!ADMIN_PASSWORD) throw new Error('Missing ADMIN_PASSWORD environment variabl
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Limit login attempts to prevent brute forcing the admin password
+// Rate-limit login attempts to reduce brute-force risk.
 const loginLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20 })
 
-// Limit guest registrations to avoid spam or DoS attacks.  A generous
-// window is used since this endpoint may be hit by multiple guests but
-// prevents unbounded growth of the guest list file.
+// Rate-limit guest registrations to avoid spam/DoS.
 const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 })
+
+/* ====================== Auth endpoints ====================== */
 
 app.post('/api/auth/login', loginLimiter, (req, res) => {
   try {
     const raw = req.body?.password ?? ''
     const password = typeof raw === 'string' ? raw.trim() : ''
-    if (password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Invalid password' })
+    if (password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Invalid password' })
+    }
 
     const token = jwt.sign({ role: 'user' }, JWT_SECRET!, { expiresIn: '7d' })
     res.cookie('access_token', token, {
       httpOnly: true,
       sameSite: 'lax',
-      // Secure cookies are required in production.  When developing over HTTP
-      // you may set NODE_ENV=development to allow insecure cookies.
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 3600 * 1000,
     })
@@ -98,41 +94,13 @@ function requireUser(req: any, res: any, next: any) {
   }
 }
 
-// Register protected routes and static file serving
-app.use(makeProtectedUploadRoutes(requireUser))
-app.use((req, res, next) => {
-  if (req.path.includes('/.private')) {
-    return res.status(404).end()
-  }
-  next()
-})
-// Serve uploaded files publicly; disable caching and do not allow path traversal
-app.use(
-  '/uploads',
-  express.static(path.join(process.cwd(), 'uploads'), {
-    etag: true,
-    lastModified: true,
-    cacheControl: true,
-    maxAge: 0,
-    setHeaders(res) {
-      res.setHeader('Cache-Control', 'no-cache')
-    },
-  }),
-)
-app.use('/', trackingRouter)
-// Mount the Gmail integration router.  This provides /api/gmail/auth,
-// /api/gmail/callback and /api/gmail/signature endpoints.
-app.use('/', gmailRouter)
-app.use((err: any, _req: any, res: any, _next: any) => {
-  console.error('API error:', err)
-  res.status(500).json({ error: String(err?.message || err) })
-})
+/* ====================== Guest registry ====================== */
 
 /**
- * Sanitize a string for use as a stable identifier.  Converts the input to
- * lowercase, replaces whitespace with underscores, removes accents, drops
- * invalid characters and collapses multiple underscores.  Leading and
- * trailing underscores are also removed.
+ * Sanitize a string for use as a stable identifier. Converts the input
+ * to lowercase, replaces whitespace with underscores, removes accents,
+ * drops invalid characters and collapses multiple underscores. Leading
+ * and trailing underscores are also removed.
  */
 function sanitizeId(input: string) {
   return (input || '')
@@ -150,29 +118,69 @@ const dataDir = path.join(__dirname, '.private')
 fs.mkdirSync(dataDir, { recursive: true })
 const guestsFile = path.join(dataDir, 'guests.json')
 
-/** load current guest list (safe) */
-function readGuests(): any[] {
+// Retention / size limits for the guest registry.
+// These can be overridden via environment variables if needed.
+const GUEST_MAX_AGE_DAYS = Number(process.env.GUEST_MAX_AGE_DAYS || 364) // default: 1 year
+const GUEST_MAX_ENTRIES = Number(process.env.GUEST_MAX_ENTRIES || 10000) // default: 10k entries
+
+interface GuestEntry {
+  id: string
+  name: string
+  email: string
+  phone: string
+  enterprise?: string
+  ts: number
+}
+
+/** Load current guest list from disk. On any error returns an empty array. */
+function readGuests(): GuestEntry[] {
   try {
     if (!fs.existsSync(guestsFile)) return []
     const raw = fs.readFileSync(guestsFile, 'utf8')
     const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
+    return Array.isArray(arr) ? (arr as GuestEntry[]) : []
   } catch {
     return []
   }
 }
 
-/** save guest list (atomic-ish) */
-function writeGuests(list: any[]) {
+/**
+ * Save guest list to disk using a simple "write temp + rename" pattern.
+ * This is not fully crash-safe (no fsync) but is good enough for this scale.
+ */
+function writeGuests(list: GuestEntry[]) {
   const tmp = `${guestsFile}.tmp`
   fs.writeFileSync(tmp, JSON.stringify(list, null, 2))
   fs.renameSync(tmp, guestsFile)
 }
 
 /**
- * Public endpoint: store optional guest info.  This endpoint is rate
- * limited and validates inputs against common patterns.  Excessively long
- * names and emails are rejected to avoid flooding the guest registry.
+ * Prune guest list:
+ *  - drop entries older than GUEST_MAX_AGE_DAYS
+ *  - enforce maximum count GUEST_MAX_ENTRIES (keep newest by ts)
+ */
+function pruneGuests(list: GuestEntry[]): GuestEntry[] {
+  const now = Date.now()
+  const cutoff = now - GUEST_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+
+  // Filter by age
+  let pruned = list.filter((g) => typeof g.ts === 'number' && g.ts >= cutoff)
+
+  // Enforce max count
+  if (pruned.length > GUEST_MAX_ENTRIES) {
+    pruned = pruned
+      .slice()
+      .sort((a, b) => a.ts - b.ts) // oldest first
+      .slice(pruned.length - GUEST_MAX_ENTRIES) // keep newest
+  }
+
+  return pruned
+}
+
+/**
+ * Public endpoint: store optional guest info.
+ * This endpoint is rate-limited and validates input using shared regexes.
+ * Before appending a new guest, we prune old / excess entries.
  */
 app.post('/api/guest/register', registerLimiter, async (req, res) => {
   try {
@@ -181,18 +189,17 @@ app.post('/api/guest/register', registerLimiter, async (req, res) => {
     const phone = (req.body?.phone ?? '').toString().trim()
     const enterprise = (req.body?.enterprise ?? '').toString().trim() || undefined
 
-    // Validate name: required and not too long.  Reject emoji or non latin
-    // letters by ensuring the sanitized id is non-empty.  You could relax
-    // this condition depending on your target audience.
+    // Basic validation
     if (!name) return res.status(400).json({ error: 'Nom requis' })
     if (name.length > 80) return res.status(400).json({ error: 'Nom trop long' })
-    // Validate email and phone using shared regexes.
-    if (!EMAIL_REGEX.test(email)) return res.status(400).json({ error: 'E‑mail invalide' })
+    if (!EMAIL_REGEX.test(email)) return res.status(400).json({ error: 'E-mail invalide' })
     if (!FR_PHONE_REGEX.test(phone)) return res.status(400).json({ error: 'Téléphone invalide' })
 
-    const list = readGuests()
+    // Load, prune and then append.
+    let list = readGuests()
+    list = pruneGuests(list)
 
-    // Derive a unique id from the sanitized name or fallback to userN
+    // Derive a unique id from the sanitized name or fall back to userN.
     let base = name ? sanitizeId(name) : ''
     if (!base) base = `user${list.length + 1}`
     let id = base
@@ -201,7 +208,7 @@ app.post('/api/guest/register', registerLimiter, async (req, res) => {
       id = `${base}${suffix++}`
     }
 
-    const entry = {
+    const entry: GuestEntry = {
       id,
       name,
       email,
@@ -209,6 +216,7 @@ app.post('/api/guest/register', registerLimiter, async (req, res) => {
       enterprise,
       ts: Date.now(),
     }
+
     list.push(entry)
     writeGuests(list)
 
@@ -219,18 +227,95 @@ app.post('/api/guest/register', registerLimiter, async (req, res) => {
   }
 })
 
+/**
+ * Admin endpoint: fetch current (already pruned) guest list.
+ * If pruning removes entries, the file is rewritten in the pruned form.
+ */
 app.get('/api/admin/guests', requireUser, (_req, res) => {
   try {
-    const list = readGuests()
+    let list = readGuests()
+    const pruned = pruneGuests(list)
+
+    if (pruned.length !== list.length) {
+      writeGuests(pruned)
+      list = pruned
+    }
+
     return res.json({ ok: true, list })
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Internal error' })
   }
 })
 
-// Configure CORS using FRONT_ORIGIN.  This overrides the earlier CORS
-// middleware and should be the last CORS configuration before starting the
-// server.
-app.use(cors({ origin: FRONT_ORIGIN, credentials: true }))
+/**
+ * Admin endpoint: manual cleanup of guest registry.
+ *  - POST /api/admin/guests/cleanup { "mode": "all" }
+ *  - POST /api/admin/guests/cleanup { "mode": "olderThanDays", "days": 90 }
+ */
+app.post('/api/admin/guests/cleanup', requireUser, (req, res) => {
+  try {
+    const mode = req.body?.mode || 'all'
+    let list = readGuests()
+
+    if (mode === 'all') {
+      list = []
+    } else if (mode === 'olderThanDays') {
+      const days = Number(req.body?.days || GUEST_MAX_AGE_DAYS)
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
+      list = list.filter((g) => typeof g.ts === 'number' && g.ts >= cutoff)
+    } else {
+      return res.status(400).json({ error: 'Unknown cleanup mode' })
+    }
+
+    writeGuests(list)
+    return res.json({ ok: true, remaining: list.length })
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'Internal error' })
+  }
+})
+
+/* ====================== Uploads / tracking / Gmail ====================== */
+
+// Register protected upload routes (require admin)
+app.use(makeProtectedUploadRoutes(requireUser))
+
+// Block direct access to ".private" directory via HTTP.
+app.use((req, res, next) => {
+  if (req.path.includes('/.private')) {
+    return res.status(404).end()
+  }
+  next()
+})
+
+// Serve uploaded files publicly; disable caching and prevent path traversal.
+app.use(
+  '/uploads',
+  express.static(path.join(process.cwd(), 'uploads'), {
+    etag: true,
+    lastModified: true,
+    cacheControl: true,
+    maxAge: 0,
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'no-cache')
+    },
+  }),
+)
+
+// Tracking router (pixel, stats, etc.)
+app.use('/', trackingRouter)
+
+// Gmail integration router (OAuth + signature updates)
+app.use('/', gmailRouter)
+
+/* ====================== Error handler & server start ====================== */
+
+// Final error handler
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error('API error:', err)
+  res.status(500).json({ error: String(err?.message || err) })
+})
+
 const PORT = Number(process.env.PORT) || 3001
-app.listen(PORT, () => console.warn(`API listening on http://localhost:${PORT}`))
+app.listen(PORT, () => {
+  console.warn(`API listening on http://localhost:${PORT}`)
+})

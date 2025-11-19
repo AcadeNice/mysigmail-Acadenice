@@ -1,6 +1,6 @@
 RewriteEngine On
 
-# СНАЧАЛА — прокси на API
+# start — API proxy
 RewriteCond %{REQUEST_URI} ^/api/
 RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
 
@@ -10,7 +10,7 @@ RewriteRule ^uploads/(.*)$ http://127.0.0.1:3001/uploads/$1 [P,L]
 RewriteCond %{REQUEST_URI} ^/pixel\.gif$
 RewriteRule ^pixel\.gif$ http://127.0.0.1:3001/pixel.gif [P,L]
 
-# ПОТОМ — SPA fallback
+# after — SPA fallback
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
