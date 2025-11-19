@@ -34,7 +34,18 @@ const links = computed(() => {
           </a>
         </UiButton>
       </span>
+
+      <!--  /cgu -->
+      <span class="not-last:after:content-['•'] not-last:after:px-1">
+        <RouterLink
+          to="/cgu"
+          class="underline hover:no-underline"
+        >
+          Conditions d’utilisation
+        </RouterLink>
+      </span>
     </div>
+
     <div>©{{ year }} • Acadenice</div>
     <div>v{{ version }}</div>
   </div>

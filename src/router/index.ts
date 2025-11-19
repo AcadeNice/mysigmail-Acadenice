@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import CguPage from '@/pages/CguPage.vue'
+
 const routes = [
   {
     path: '/',
@@ -8,6 +10,11 @@ const routes = [
     meta: {
       title: 'Basic signature details',
     },
+  },
+  {
+    path: '/cgu',
+    name: 'cgu',
+    component: CguPage,
   },
   {
     path: '/social',

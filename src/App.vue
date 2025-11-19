@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import 'vue-sonner/style.css'
+import { useRoute } from 'vue-router'
 import { Toaster } from 'vue-sonner'
 
 import AuthDialog from '@/components/AuthDialog.vue'
@@ -12,7 +13,17 @@ import { useAccess } from '@/composables/useAccess'
 import { EMAIL_REGEX, FR_PHONE_REGEX } from '@/utils/validators.ts'
 
 const { continueAsGuest, loadingRole, unlocked } = useAccess()
-const showGate = computed(() => !unlocked.value)
+const route = useRoute()
+
+const PUBLIC_ROUTES = ['/cgu']
+
+const showGate = computed(() => {
+  // on public page (/cgu), no gate
+  if (PUBLIC_ROUTES.includes(route.path)) return false
+
+  // for other pages
+  return !unlocked.value
+})
 
 /* ---------- theme: follow system preference ---------- */
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
@@ -240,8 +251,8 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           {{ saveErr }}
         </p>
 
-        <!-- Staff link -->
-        <div class="mt-6 text-[12px] flex items-center justify-center">
+        <!-- Staff link + CGU link (vertical) -->
+        <div class="mt-6 text-[12px] flex flex-col items-center justify-center gap-2">
           <button
             type="button"
             class="underline hover:no-underline cursor-pointer"
@@ -250,13 +261,21 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           >
             Se connecter
           </button>
+
+          <RouterLink
+            to="/cgu"
+            class="underline hover:no-underline"
+            :class="isDark ? 'text-dark-link' : 'text-light-link'"
+          >
+            Conditions d’utilisation
+          </RouterLink>
         </div>
+
+        <!-- Staff login modal (unchanged) -->
+        <AuthDialog />
+        <Toaster />
       </div>
     </div>
-
-    <!-- Staff login modal (unchanged) -->
-    <AuthDialog />
-    <Toaster />
   </div>
 </template>
 
