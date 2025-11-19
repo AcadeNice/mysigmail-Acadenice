@@ -83,7 +83,7 @@ router.get('/api/pixel-stats', (req, res) => {
   const limit = Math.min(limitRaw || 20000, 20000)
   try {
     if (!fs.existsSync(logFile)) {
-      return res.json({ total: 0, byDate: {}, bySignature: {} })
+      return res.json({ total: 0, byDate: {}, bySignature: {}, byRecipient: {} })
     }
     const lines = fs.readFileSync(logFile, 'utf8').trim().split('\n')
     const slice = lines.slice(-limit)
@@ -95,17 +95,33 @@ router.get('/api/pixel-stats', (req, res) => {
         /* ignore malformed */
       }
     }
+
     const byDate: Record<string, number> = {}
     const bySig: Record<string, number> = {}
+    const byRecipient: Record<string, number> = {}
+
     for (const entry of logs) {
       const ts = entry.ts
       const date = new Date(ts).toISOString().slice(0, 10) // e.g. 2025-11-17
       byDate[date] = (byDate[date] || 0) + 1
+
+      // sig
       const sig = (entry.q?.sig as any) || 'unknown'
-      const key = typeof sig === 'string' ? sig : String(sig)
-      bySig[key] = (bySig[key] || 0) + 1
+      const sigKey = typeof sig === 'string' ? sig : String(sig)
+      bySig[sigKey] = (bySig[sigKey] || 0) + 1
+
+      // rcpt
+      const rcpt = (entry.q?.rcpt as any) || 'unknown'
+      const rcptKey = typeof rcpt === 'string' ? rcpt : String(rcpt)
+      byRecipient[rcptKey] = (byRecipient[rcptKey] || 0) + 1
     }
-    return res.json({ total: logs.length, byDate, bySignature: bySig })
+
+    return res.json({
+      total: logs.length,
+      byDate,
+      bySignature: bySig,
+      byRecipient,
+    })
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'stats error' })
   }
