@@ -9,19 +9,19 @@ import { useAccess } from '@/composables/useAccess'
 import { useCopySignature } from '@/composables/useCopySignature'
 import { useSonner } from '@/composables/useSonner'
 
-// Копирование / размер HTML
+// copy / size of HTML
 const { isHtmlLarge, onCopyHTML, onCopySelect } = useCopySignature()
-// JSON (импорт/экспорт подписи)
+// JSON (import/export of signature)
 const { downloadJSON, installed, uploadJSON } = useSignatures()
-// Тосты
+// toasts
 const { sonner } = useSonner()
-// Роль пользователя (guest / user)
+// roles (guest / user)
 const { isUser } = useAccess()
 
 const inputRef = ref<HTMLInputElement>()
 const loadingGmail = ref(false)
 const disconnectingGmail = ref(false)
-// Подключён ли сейчас Google (есть ли валидные креды на бэке)
+// connected to Google? (checking for valid creds)
 const gmailConnected = ref(false)
 
 function onDownload() {
@@ -44,7 +44,7 @@ function onFileSelected(e: Event) {
   reader.readAsText(file)
 }
 
-// Статус интеграции Gmail при загрузке
+// google status after loading page
 onMounted(async () => {
   try {
     const res = await fetch('/api/gmail/status', { credentials: 'include' })
@@ -56,7 +56,7 @@ onMounted(async () => {
   }
 })
 
-// Отправка текущей подписи в Gmail
+// sending Gmail signature
 async function addToGmail() {
   const el = document.querySelector('[data-slot="signature"]') as HTMLElement | null
   if (!el) {
@@ -86,7 +86,7 @@ async function addToGmail() {
       data = null
     }
 
-    // Токен отсутствует или протух → просим заново войти через Google
+    // if token expires force  Google auth
     if (res.status === 401 && (data?.error === 'google_auth_required' || !data)) {
       window.location.href = '/api/gmail/auth'
       return
@@ -114,7 +114,7 @@ async function addToGmail() {
   }
 }
 
-// Явная деавторизация Google
+// Auth Google
 async function disconnectGoogle() {
   disconnectingGmail.value = true
   try {
@@ -174,7 +174,7 @@ async function disconnectGoogle() {
         {{ loadingGmail ? 'Gmail…' : 'Add to Gmail' }}
       </UiButton>
 
-      <!-- Déconnecter Google — только если реально подключён -->
+      <!-- Déconnecter Google -->
       <UiButton
         v-if="gmailConnected"
         variant="ghost"

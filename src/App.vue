@@ -273,7 +273,6 @@ function markTouched(field: 'name' | 'email' | 'phone') {
       </div>
     </div>
 
-    <!-- ВАЖНО: глобальные компоненты, всегда в DOM -->
     <AuthDialog />
     <Toaster position="bottom-right" />
   </div>
