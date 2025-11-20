@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import 'vue-sonner/style.css'
 import { useRoute, useRouter } from 'vue-router'
 import { Toaster } from 'vue-sonner'
@@ -69,11 +69,38 @@ onBeforeUnmount(() => {
   window.removeEventListener('open-guest-gate', handleOpenGuestGate)
 })
 
+/* ---------- авто-редирект с / на /basic, если уже разблокировано ---------- */
+watch(
+  () => ({ unlocked: unlocked.value, path: route.path }),
+  ({ path, unlocked }) => {
+    if (unlocked && path === '/') {
+      router.replace('/basic')
+    }
+  },
+  { immediate: true },
+)
+
 /* ---------- form model ---------- */
 const nameInput = ref('')
 const emailInput = ref('')
 const phoneInput = ref('')
 const enterpriseInput = ref('') // optional
+
+/* ---------- name safety rules ---------- */
+// Max length for fields
+const MAX_LENGTH = 40
+// Allowed characters: letters (incl. accents), spaces, hyphen, apostrophe, dot.
+const SAFE_NAME_REGEX = /^[\p{L}\p{M}][\p{L}\p{M}'\-.\s]*$/u
+
+// Sanitized version of the name: strip zero-width chars, collapse spaces, trim
+const sanitizedName = computed(() =>
+  nameInput.value
+    // remove zero-width / BOM
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // collapse multiple whitespaces into single space
+    .replace(/\s+/g, ' ')
+    .trim(),
+)
 
 /* ---------- validation ---------- */
 // Track which fields have been interacted with.
@@ -83,15 +110,28 @@ const touched = {
   phone: ref(false),
 }
 
-const nameError = computed(() =>
-  touched.name.value && !nameInput.value.trim() ? 'Nom complet requis' : '',
-)
+const nameError = computed(() => {
+  if (!touched.name.value) return ''
+
+  const v = sanitizedName.value
+
+  if (!v) return 'Nom complet requis'
+  if (v.length > MAX_LENGTH) {
+    return `Nom trop long (max ${MAX_LENGTH} caractères)`
+  }
+  if (!SAFE_NAME_REGEX.test(v)) {
+    return 'Nom invalide (caractères non autorisés)'
+  }
+  return ''
+})
+
 const emailError = computed(() => {
   if (!touched.email.value) return ''
   const v = emailInput.value.trim()
   if (!v) return 'E-mail requis'
   return EMAIL_REGEX.test(v) ? '' : 'E-mail invalide'
 })
+
 const phoneNormalized = computed(() => phoneInput.value.trim())
 const phoneError = computed(() => {
   if (!touched.phone.value) return ''
@@ -102,7 +142,8 @@ const phoneError = computed(() => {
 
 const formValid = computed(
   () =>
-    !!nameInput.value.trim()
+    !nameError.value
+    && !!sanitizedName.value
     && EMAIL_REGEX.test(emailInput.value.trim())
     && FR_PHONE_REGEX.test(phoneNormalized.value),
 )
@@ -141,7 +182,10 @@ async function proceedAsGuest() {
   touched.name.value = true
   touched.email.value = true
   touched.phone.value = true
+
   if (!formValid.value) return
+
+  const safeName = sanitizedName.value
 
   saving.value = true
   saveErr.value = ''
@@ -152,7 +196,7 @@ async function proceedAsGuest() {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: nameInput.value.trim(),
+        name: safeName,
         email: emailInput.value.trim(),
         phone: phoneNormalized.value,
         enterprise: enterpriseInput.value.trim() || undefined,
@@ -171,12 +215,12 @@ async function proceedAsGuest() {
       return
     }
 
-    // 1) сохраним в sessionStorage (если очень хочешь оставить)
+    // 1) сохраним в sessionStorage
     try {
       sessionStorage.setItem(
         GUEST_PREFILL_KEY,
         JSON.stringify({
-          fullName: nameInput.value.trim(),
+          fullName: safeName,
           email: emailInput.value.trim(),
           phone: phoneNormalized.value,
           enterprise: enterpriseInput.value.trim(),
@@ -188,7 +232,7 @@ async function proceedAsGuest() {
 
     // 2) сразу пробросим в стор подписи
     applyGuestToSignature({
-      fullName: nameInput.value.trim(),
+      fullName: safeName,
       email: emailInput.value.trim(),
       phone: phoneNormalized.value,
       enterprise: enterpriseInput.value.trim() || undefined,
@@ -263,6 +307,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             <UiInput
               v-model="nameInput"
               placeholder="Prénom Nom"
+              :maxlength="MAX_LENGTH"
               :disabled="loadingRole || saving"
               :aria-invalid="!!nameError"
               @blur="markTouched('name')"
@@ -285,6 +330,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
               type="email"
               placeholder="prenom.nom@acadenice.fr"
               :disabled="loadingRole || saving"
+              :maxlength="MAX_LENGTH"
               :aria-invalid="!!emailError"
               @blur="markTouched('email')"
             />
@@ -305,6 +351,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
               v-model="phoneInput"
               inputmode="tel"
               placeholder="06 12 34 56 78"
+              :maxlength="MAX_LENGTH"
               :disabled="loadingRole || saving"
               :aria-invalid="!!phoneError"
               @blur="markTouched('phone')"
@@ -332,6 +379,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
               v-model="enterpriseInput"
               placeholder="AcadéNice"
               :disabled="loadingRole || saving"
+              :maxlength="MAX_LENGTH"
             />
           </div>
         </div>

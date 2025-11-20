@@ -75,7 +75,7 @@ watch(
 )
 
 const baseName = computed(() => sanitizeBase(fullName.value))
-
+const isDefaultFullName = computed(() => fullName.value.trim().toLowerCase() === 'prénom nom')
 // ---- check if file exists (user only) ----
 const existingFile = ref<string>('') // john_doe.png
 const checking = ref(false)
@@ -303,7 +303,7 @@ watch(openDialog, (open) => {
     class="inline-flex items-center gap-2"
   >
     <button
-      v-if="baseName"
+      v-if="baseName && !isDefaultFullName"
       class="rounded-md border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 bg-transparent dark:bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 border-slate-200 dark:border-slate-700 disabled:opacity-50"
       :disabled="checking || loadingRole"
       @click="onClick"
@@ -313,8 +313,11 @@ watch(openDialog, (open) => {
 
     <span class="text-xs text-slate-500">
       <template v-if="loadingRole || checking"> Checking… </template>
-      <template v-else-if="baseName">
+      <template v-else-if="baseName && !isDefaultFullName">
         File: <strong>{{ existingFile || `${baseName}.*` }}</strong>
+      </template>
+      <template v-else-if="isDefaultFullName">
+        Remplacez « Prénom Nom » par vos véritables prénom et nom.
       </template>
       <template v-else> Remplissez d'abord le nom complet. </template>
     </span>

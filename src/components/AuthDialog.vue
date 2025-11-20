@@ -79,28 +79,6 @@ function onKeydown(e: KeyboardEvent) {
       class="sm:max-w-[420px] z-[100000] p-6 rounded-2xl"
       :class="isDark ? 'dark auth-card--dark' : 'auth-card--light'"
     >
-      <UiDialogClose as-child>
-        <button
-          type="button"
-          class="ui-close-btn"
-          aria-label="Fermer"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
-      </UiDialogClose>
-
       <UiDialogHeader>
         <UiDialogTitle :class="isDark ? 'text-white' : 'text-neutral-900'">
           Accès réservé

@@ -1,6 +1,10 @@
+// server/gmail.ts
 import { Router } from 'express'
 import { google } from 'googleapis'
+import fs from 'node:fs'
+import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 /**
  * Gmail integration router. Implements:
@@ -8,6 +12,7 @@ import process from 'node:process'
  *   GET  /api/gmail/callback    — getting Google code
  *   POST /api/gmail/signature   — signature updates
  *   POST /api/gmail/disconnect  — token deattachment
+ *   GET  /api/gmail/status      — current connection status
  *
  * .env must contain:
  *   GOOGLE_CLIENT_ID
@@ -26,6 +31,75 @@ if (!clientId || !clientSecret || !redirectUri) {
 
 const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 
+/* ====================== tokens storage ====================== */
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const dataDir = path.join(__dirname, '.private')
+fs.mkdirSync(dataDir, { recursive: true })
+const tokensFile = path.join(dataDir, 'gmail-tokens.json')
+
+const GMAIL_TOKENS_MAX_AGE_DAYS = Number(process.env.GMAIL_TOKENS_MAX_AGE_DAYS || 364)
+
+interface GmailTokenEntry {
+  email: string
+  tokens: any
+  ts: number
+}
+
+function readTokens(): Record<string, GmailTokenEntry> {
+  try {
+    if (!fs.existsSync(tokensFile)) return {}
+    const raw = fs.readFileSync(tokensFile, 'utf8')
+    const obj = JSON.parse(raw)
+    return obj && typeof obj === 'object' ? (obj as Record<string, GmailTokenEntry>) : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeTokens(map: Record<string, GmailTokenEntry>) {
+  const tmp = `${tokensFile}.tmp`
+  fs.writeFileSync(tmp, JSON.stringify(map, null, 2))
+  fs.renameSync(tmp, tokensFile)
+}
+
+function pruneTokens(map: Record<string, GmailTokenEntry>) {
+  const now = Date.now()
+  const cutoff = now - GMAIL_TOKENS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+  const out: Record<string, GmailTokenEntry> = {}
+
+  for (const [email, entry] of Object.entries(map)) {
+    if (typeof entry.ts === 'number' && entry.ts >= cutoff) {
+      out[email] = entry
+    }
+  }
+  return out
+}
+
+function saveGmailTokens(email: string, tokens: any) {
+  const all = pruneTokens(readTokens())
+  all[email] = { email, tokens, ts: Date.now() }
+  writeTokens(all)
+}
+
+function getGmailTokens(email: string): any | null {
+  const all = pruneTokens(readTokens())
+  const entry = all[email]
+  if (!entry) return null
+  return entry.tokens
+}
+
+function deleteGmailTokens(email: string) {
+  const all = pruneTokens(readTokens())
+  if (!all[email]) return
+  delete all[email]
+  writeTokens(all)
+}
+
+/* ====================== helpers ====================== */
+
 function getAuthUrl() {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -39,6 +113,8 @@ function getAuthUrl() {
   })
 }
 
+/* ====================== OAuth start ====================== */
+
 // OAuth start: Google access agreement
 gmailRouter.get('/api/gmail/auth', (_req, res) => {
   if (!clientId || !clientSecret || !redirectUri) {
@@ -48,43 +124,75 @@ gmailRouter.get('/api/gmail/auth', (_req, res) => {
   return res.redirect(url)
 })
 
-// Callback after Google login: getting tokens
+/* ====================== OAuth callback ====================== */
+
+// Callback after Google login: getting tokens + привязка к конкретному Gmail
 gmailRouter.get('/api/gmail/callback', async (req: any, res) => {
   const code = req.query.code
   if (!code || typeof code !== 'string') {
     return res.status(400).send('Missing code')
   }
+
   try {
     const { tokens } = await oauth2Client.getToken(code)
+
+    // storing client side (email)
     oauth2Client.setCredentials(tokens)
-    // redirect back to app (/basic or we use /)
-    return res.redirect('/')
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
+    const profile = await gmail.users.getProfile({ userId: 'me' })
+    const emailAddress = profile.data.emailAddress
+
+    if (!emailAddress) {
+      console.error('[gmail] Cannot determine Gmail emailAddress')
+      return res.status(500).send('Cannot determine Gmail address')
+    }
+
+    // saving tokens on back email
+    saveGmailTokens(emailAddress, tokens)
+
+    // saving in cookies
+    res.cookie('gmail_email', emailAddress, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 3600 * 1000,
+    })
+
+    return res.redirect('/basic')
   } catch (e: any) {
     console.error('OAuth error:', e)
     return res.status(500).json({ error: e?.message || 'OAuth error' })
   }
 })
 
-//  Gmail signature update
+/* ====================== Signature update ====================== */
+
 gmailRouter.post('/api/gmail/signature', async (req: any, res) => {
   const html: string | undefined = req.body?.html
   if (!html) return res.status(400).json({ error: 'Missing signature HTML' })
 
   try {
-    // in case we dont have a valid token
-    if (!oauth2Client.credentials || !oauth2Client.credentials.access_token) {
+    const gmailEmail = req.cookies?.gmail_email
+    if (!gmailEmail) {
       return res.status(401).json({ error: 'google_auth_required' })
     }
 
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
+    const storedTokens = getGmailTokens(gmailEmail)
+    if (!storedTokens) {
+      return res.status(401).json({ error: 'google_auth_required' })
+    }
 
-    // primary user e-mail
-    const profile = await gmail.users.getProfile({ userId: 'me' })
-    const emailAddress = profile.data.emailAddress || 'me'
+    // OAuth2Client
+    const client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
+    client.setCredentials(storedTokens)
 
+    const gmail = google.gmail({ version: 'v1', auth: client })
+
+    // patching signature for "me" (thats how gmailEmail is called)
     await gmail.users.settings.sendAs.patch({
       userId: 'me',
-      sendAsEmail: emailAddress,
+      sendAsEmail: gmailEmail,
       requestBody: {
         signature: html,
       },
@@ -96,8 +204,15 @@ gmailRouter.post('/api/gmail/signature', async (req: any, res) => {
 
     const status = e?.code || e?.response?.status
     if (status === 401 || status === 403) {
-      // token is expired => force login back
-      oauth2Client.setCredentials({})
+      // re auth
+      try {
+        const gmailEmail = req.cookies?.gmail_email
+        if (gmailEmail) {
+          deleteGmailTokens(gmailEmail)
+        }
+      } catch {
+        // ignore
+      }
       return res.status(401).json({ error: 'google_auth_required' })
     }
 
@@ -105,17 +220,32 @@ gmailRouter.post('/api/gmail/signature', async (req: any, res) => {
   }
 })
 
+/* ====================== Disconnect ====================== */
+
 // Google disconnect logic
-gmailRouter.post('/api/gmail/disconnect', async (_req, res) => {
+gmailRouter.post('/api/gmail/disconnect', async (req: any, res) => {
   try {
-    if (oauth2Client.credentials?.access_token || oauth2Client.credentials?.refresh_token) {
-      try {
-        await oauth2Client.revokeCredentials()
-      } catch {
-        // just ignoring revoke
+    const gmailEmail = req.cookies?.gmail_email
+
+    if (gmailEmail) {
+      const storedTokens = getGmailTokens(gmailEmail)
+      if (storedTokens?.access_token || storedTokens?.refresh_token) {
+        try {
+          const tmpClient = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
+          tmpClient.setCredentials(storedTokens)
+          await tmpClient.revokeCredentials()
+        } catch {
+          // revoke
+        }
       }
+
+      // cleaning tokens
+      deleteGmailTokens(gmailEmail)
     }
-    oauth2Client.setCredentials({})
+
+    // cleaning cookies
+    res.clearCookie('gmail_email')
+
     return res.json({ ok: true })
   } catch (e: any) {
     console.error('Gmail disconnect error:', e)
@@ -123,12 +253,18 @@ gmailRouter.post('/api/gmail/disconnect', async (_req, res) => {
   }
 })
 
-gmailRouter.get('/api/gmail/status', (_req, res) => {
-  const connected = Boolean(
-    oauth2Client.credentials?.access_token || oauth2Client.credentials?.refresh_token,
-  )
+/* ====================== Status ====================== */
 
-  return res.json({ connected })
+gmailRouter.get('/api/gmail/status', (req: any, res) => {
+  const gmailEmail = req.cookies?.gmail_email
+  if (!gmailEmail) {
+    return res.json({ connected: false })
+  }
+
+  const tokens = getGmailTokens(gmailEmail)
+  const connected = !!tokens
+
+  return res.json({ connected, email: connected ? gmailEmail : undefined })
 })
 
 export default gmailRouter

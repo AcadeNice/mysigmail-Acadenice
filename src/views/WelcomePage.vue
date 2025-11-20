@@ -67,7 +67,7 @@ function resetTilt() {
           <!-- Logo -->
           <a
             aria-label="homepage"
-            href="/"
+            href="/basic"
             class="flex items-center gap-2"
           >
             <img

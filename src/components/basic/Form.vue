@@ -128,6 +128,11 @@ watch(
   { immediate: true },
 )
 const baseName = computed(() => toBaseName(fullName.value))
+const isDefaultFullName = computed(
+  () =>
+    fullName.value.trim().toLowerCase() === 'prénom nom'
+    || fullName.value.trim().toLowerCase() === 'prenom nom',
+)
 
 const existingFile = ref<string>('')
 const checking = ref(false)
@@ -247,7 +252,9 @@ function onUploaded(nameOrBlob: any) {
 }
 
 /* ------------ convenient flag: can upload ------------ */
-const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
+const canUpload = computed(
+  () => isUser.value && !isHttpUrl(imageUrl.value) && !!baseName.value && !isDefaultFullName.value,
+)
 </script>
 
 <template>
