@@ -6,9 +6,6 @@
   </picture>
 </p>
 
-<p align="center">
-  <img src=".github/hero.png" width="500" alt="MySigMail - Email Signature Generator" />
-</p>
 
 <h1 align="center">MySigMail – Fork Acadénice</h1>
 <p align="center">
@@ -31,6 +28,11 @@ Ce fork ajoute :
 - une documentation en français ;
 - un exemple de déploiement Docker/Traefik ;
 - quelques ajustements pour stabiliser le build dans un contexte container.
+
+## 📚 Documentations dédiées
+
+- Guide **développeur** : architecture, flux applicatifs et variables d'environnement sont détaillés dans [`docs/README.developpeur.md`](docs/README.developpeur.md).
+- Guide **utilisateur** : pas-à-pas pour créer et installer une signature dans [`docs/README.utilisateur.md`](docs/README.utilisateur.md).
 
 ## ✨ Fonctionnalités principales
 
