@@ -46,27 +46,21 @@ async function login(password: string) {
     throw new Error(msg)
   }
 
-  // reading login answer
-  let data: any = null
-  try {
-    data = await res.json()
-  } catch {
-    data = null
-  }
+  // После успешного login обязательно проверяем статус на сервере
+  await refreshRole()
 
-  // giving user rights if back said so
-  role.value = data?.role === 'user' ? 'user' : 'guest'
+  // Если сервер до сих пор видит нас как guest — считаем это ошибкой
+  if (role.value !== 'user') {
+    throw new Error(
+      'Connexion réussie, mais la session n\'a pas pu être établie (cookies bloqués ?).',
+    )
+  }
 
   // гейт для user не нужен, чистим флаг гостя
   try {
     localStorage.removeItem(GUEST_OK_KEY)
   } catch {}
   guestContinued.value = false
-
-  // setting status in background
-  refreshRole().catch(() => {
-    // fallback — not touching role.value
-  })
 }
 
 async function logout() {

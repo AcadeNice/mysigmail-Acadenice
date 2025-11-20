@@ -51,7 +51,6 @@ function deleteAddon() {
       class="p-2"
     >
       <AddonsDisclaimer v-if="type === 'disclaimer'" />
-      <AddonsTrackingPixel v-if="type === 'trackingPixel'" />
       <AddonsCta v-if="type === 'cta'" />
       <AddonsBanner v-if="type === 'banner'" />
       <AddonsVideoConference v-if="type === 'videoConference'" />

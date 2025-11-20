@@ -12,16 +12,15 @@ export const addons: AddonTool[] = [
       googlePlay: 'https://example.com',
     },
   },
-  {
-    label: 'Tracking Pixel',
-    type: 'trackingPixel',
-    isNew: true,
-    value: {
-      url: '',
-      enabled: false,
-      recipient: '',
-    },
-  },
+  // {
+  //   label: 'Tracking Pixel',
+  //   isNew: true,
+  //   value: {
+  //     url: '',
+  //     enabled: false,
+  //     recipient: '',
+  //   },
+  // },
   {
     label: 'Disclaimer',
     type: 'disclaimer',

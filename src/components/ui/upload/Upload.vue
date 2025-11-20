@@ -21,8 +21,9 @@ const props = withDefaults(defineProps<Props>(), { quality: 0.9 })
 const emit = defineEmits<Emits>()
 const { sonner } = useSonner()
 const { installed } = useSignatures()
+const { imageVersion } = useImageVersion()
 
-// ---- роль тянем С СЕРВЕРА ----
+// ---- role from server ----
 const isUser = ref(false)
 const loadingRole = ref(true)
 async function fetchRole() {
@@ -39,15 +40,21 @@ async function fetchRole() {
 }
 fetchRole()
 
-// ---- базовое имя из Full Name для user ----
+// ---- base name from Full Name for user ----
 function readFullName(): string {
   const basic = installed.value?.tools?.basic ?? []
+
   const cand
-    = basic.find((f: any) => f.key === 'fullName' || f.id === 'full-name')
-      ?? basic.find((f: any) => /full\s*name/i.test(String(f?.label)))
+    = basic.find((f: any) => f.key === 'fullName')
+    // 2) частые id
+      ?? basic.find((f: any) => f.id === 'full-name' || f.id === 'name')
+    // 3) по метке (FR + EN)
+      ?? basic.find((f: any) => /full\s*name|nom\s+complet/i.test(String(f?.label || '')))
       ?? basic[0]
+
   return (cand?.value ?? '').toString()
 }
+
 function sanitizeBase(input: string): string {
   if (!input) return ''
   let s = input.trim().toLowerCase()
@@ -57,16 +64,19 @@ function sanitizeBase(input: string): string {
   s = s.replace(/_+/g, '_').replace(/^_+|_+$/g, '')
   return s
 }
+
 const fullName = ref(readFullName())
 watch(
   () => readFullName(),
   (v) => {
     fullName.value = v
   },
+  { immediate: true },
 )
+
 const baseName = computed(() => sanitizeBase(fullName.value))
 
-// ---- проверка наличия файла (только user) ----
+// ---- check if file exists (user only) ----
 const existingFile = ref<string>('') // john_doe.png
 const checking = ref(false)
 let t: number | undefined
@@ -115,18 +125,19 @@ const aspectRatios = [
   { value: 16 / 9, label: '16:9' },
   { value: Number.NaN, label: 'Free' },
 ]
+
 const cropPreview = computed(() => (file.value ? URL.createObjectURL(file.value) : ''))
 const buttonText = computed(() =>
-  isPending.value ? 'Uploading…' : existingFile.value ? 'Replace' : 'Upload',
+  isPending.value ? 'Uploading…' : existingFile.value ? 'Remplacer' : 'Télécharger',
 )
 
 function onClick() {
   if (!isUser.value) return
   if (!baseName.value) {
     sonner({
-      title: 'Full Name is required',
+      title: 'Le nom complet est obligatoire.',
       type: 'error',
-      description: 'Fill the Full Name first.',
+      description: 'Remplissez d\'abord le nom complet.',
     })
     return
   }
@@ -149,19 +160,22 @@ function onClick() {
 
 function initCropper() {
   if (!imageRef.value) return
+
+  // Destroy previous instance that was bound to an old <img>
   if (cropper) {
-    cropper.replace(cropPreview.value!)
-  } else {
-    cropper = new Cropper(imageRef.value, {
-      aspectRatio: aspectRatio.value,
-      viewMode: 1,
-      autoCropArea: 1,
-      zoomable: false,
-      crop: () => {
-        croppedPreview.value = cropper?.getCroppedCanvas().toDataURL() || ''
-      },
-    })
+    cropper.destroy()
+    cropper = null
   }
+
+  cropper = new Cropper(imageRef.value, {
+    aspectRatio: aspectRatio.value,
+    viewMode: 1,
+    autoCropArea: 1,
+    zoomable: false,
+    crop: () => {
+      croppedPreview.value = cropper?.getCroppedCanvas().toDataURL() || ''
+    },
+  })
 }
 
 function setAspectRatio(v: AcceptableValue) {
@@ -189,15 +203,15 @@ async function uploadImage() {
   if (!isUser.value || !file.value) return
   if (!baseName.value) {
     sonner({
-      title: 'Full Name is required',
+      title: 'Le nom complet est obligatoire.',
       type: 'error',
-      description: 'Fill the Full Name first.',
+      description: 'Remplissez d\'abord le nom complet.',
     })
     return
   }
   if (existingFile.value) {
     // eslint-disable-next-line no-alert
-    const ok = window.confirm('An image already exists. Replace it?')
+    const ok = window.confirm('Une image existe déjà. La remplacer ?')
     if (!ok) return
   }
 
@@ -216,7 +230,8 @@ async function uploadImage() {
     const finalName = `${baseName.value}.${ext}`
 
     const form = new FormData()
-    form.append('base', baseName.value) // важно — идёт перед файлом
+    // important — base goes before file
+    form.append('base', baseName.value)
     form.append('file', blob, finalName)
 
     const res = await fetch('/api/upload', { method: 'POST', body: form, credentials: 'include' })
@@ -224,6 +239,16 @@ async function uploadImage() {
     const data = await res.json()
 
     existingFile.value = data.filename || finalName
+
+    // 🔥 важное место — обновляем версию для bust кэша
+    if (data.mtime) {
+      // если сервер отдаёт timestamp
+      imageVersion.value = Math.floor(data.mtime)
+    } else {
+      // fallback — просто текущее время
+      imageVersion.value = Date.now()
+    }
+
     openDialog.value = false
     sonner({
       title: 'Success',
@@ -247,10 +272,17 @@ watch(cropPreview, () => {
     widthOriginal.value = img.width
   }
 })
+
+watch(openDialog, (open) => {
+  if (!open && cropper) {
+    cropper.destroy()
+    cropper = null
+  }
+})
 </script>
 
 <template>
-  <!-- Guest: только URL -->
+  <!-- Guest: only URL -->
   <div
     v-if="!isUser && !loadingRole"
     class="flex w-full items-center gap-2"
@@ -265,111 +297,113 @@ watch(cropPreview, () => {
     >
   </div>
 
-  <!-- User: загрузка -->
+  <!-- User: upload -->
   <div
     v-else
     class="inline-flex items-center gap-2"
   >
     <button
+      v-if="baseName"
       class="rounded-md border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 bg-transparent dark:bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 border-slate-200 dark:border-slate-700 disabled:opacity-50"
-      :disabled="!baseName || checking || loadingRole"
+      :disabled="checking || loadingRole"
       @click="onClick"
     >
       {{ buttonText }}
     </button>
+
     <span class="text-xs text-slate-500">
-      <template v-if="loadingRole || checking">Checking…</template>
+      <template v-if="loadingRole || checking"> Checking… </template>
       <template v-else-if="baseName">
         File: <strong>{{ existingFile || `${baseName}.*` }}</strong>
       </template>
-      <template v-else>Fill the Full Name first</template>
+      <template v-else> Remplissez d'abord le nom complet. </template>
     </span>
+  </div>
 
-    <!-- Модалка кадрирования -->
+  <!-- Crop modal -->
+  <div
+    v-if="openDialog"
+    class="fixed inset-0 z-[99990] flex items-center justify-center p-4"
+  >
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+    <!-- panel -->
     <div
-      v-if="openDialog"
-      class="fixed inset-0 z-[99990] flex items-center justify-center p-4"
+      class="relative z-[99991] w-full max-w-2xl rounded-xl border p-6 shadow-lg bg-white text-slate-900 border-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700"
     >
-      <!-- overlay -->
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div class="mb-3">
+        <h3 class="text-lg font-semibold">
+          Upload Image
+        </h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Crop image and upload. The file name is auto-derived from your Full Name.
+        </p>
+      </div>
 
-      <!-- panel -->
-      <div
-        class="relative z-[99991] w-full max-w-2xl rounded-xl border p-6 shadow-lg bg-white text-slate-900 border-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700"
-      >
-        <div class="mb-3">
-          <h3 class="text-lg font-semibold">
-            Upload Image
-          </h3>
+      <div class="grid grid-cols-[3fr_1fr] gap-4 overflow-hidden">
+        <div class="relative max-h-[250px] min-h-[200px] bg-white dark:bg-slate-800">
+          <img
+            ref="imageRef"
+            :src="cropPreview"
+            alt="crop-preview"
+            class="max-h-[250px]"
+          >
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <img
+            :src="croppedPreview"
+            alt="cropped"
+            class="size-36 rounded-md border object-contain border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+          >
           <p class="text-sm text-slate-500 dark:text-slate-400">
-            Crop image and upload. The file name is auto-derived from your Full Name.
+            Preview
           </p>
         </div>
+      </div>
 
-        <div class="grid grid-cols-[3fr_1fr] gap-4 overflow-hidden">
-          <div class="relative max-h-[250px] min-h-[200px] bg-white dark:bg-slate-800">
-            <img
-              ref="imageRef"
-              :src="cropPreview"
-              alt="crop-preview"
-              class="max-h-[250px]"
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="mb-1 block text-sm font-medium">Aspect Ratio</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="ratio in aspectRatios"
+              :key="ratio.label"
+              class="rounded-md border px-2 py-1 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              @click="setAspectRatio(ratio.value as unknown as AcceptableValue)"
             >
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <img
-              :src="croppedPreview"
-              alt="cropped"
-              class="size-36 rounded-md border object-contain border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-            >
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-              Preview
-            </p>
+              {{ ratio.label }}
+            </button>
           </div>
         </div>
 
-        <div class="mt-4 space-y-4">
-          <div>
-            <label class="mb-1 block text-sm font-medium">Aspect Ratio</label>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="ratio in aspectRatios"
-                :key="ratio.label"
-                class="rounded-md border px-2 py-1 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-                @click="setAspectRatio(ratio.value as unknown as AcceptableValue)"
-              >
-                {{ ratio.label }}
-              </button>
-            </div>
-          </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium">
+            Resize to
+            <span class="text-slate-500 dark:text-slate-400">(Original: {{ widthOriginal ?? '—' }}px)</span>
+          </label>
+          <input
+            v-model.number="widthResized"
+            type="number"
+            min="1"
+            class="w-24 rounded-md border px-2 py-1 outline-none focus:ring bg-white text-slate-900 border-slate-200 placeholder-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:placeholder-slate-500"
+          >
+        </div>
 
-          <div>
-            <label class="mb-1 block text-sm font-medium">
-              Resize to
-              <span class="text-slate-500 dark:text-slate-400">(Original: {{ widthOriginal ?? '—' }}px)</span>
-            </label>
-            <input
-              v-model.number="widthResized"
-              type="number"
-              min="1"
-              class="w-24 rounded-md border px-2 py-1 outline-none focus:ring bg-white text-slate-900 border-slate-200 placeholder-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:placeholder-slate-500"
-            >
-          </div>
-
-          <div class="flex justify-end gap-2">
-            <button
-              class="rounded-md border px-3 py-2 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-              @click="openDialog = false"
-            >
-              Cancel
-            </button>
-            <button
-              class="rounded-md px-3 py-2 text-sm text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 disabled:opacity-50"
-              :disabled="isPending"
-              @click="uploadImage"
-            >
-              {{ buttonText }}
-            </button>
-          </div>
+        <div class="flex justify-end gap-2">
+          <button
+            class="rounded-md border px-3 py-2 text-sm border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+            @click="openDialog = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="rounded-md px-3 py-2 text-sm text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 disabled:opacity-50"
+            :disabled="isPending"
+            @click="uploadImage"
+          >
+            {{ buttonText }}
+          </button>
         </div>
       </div>
     </div>

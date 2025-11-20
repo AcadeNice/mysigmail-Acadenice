@@ -1,5 +1,5 @@
 import UilBrushAlt from '~icons/uil/brush-alt'
-import UilChartBar from '~icons/uil/chart-bar'
+// import UilChartBar from '~icons/uil/chart-bar'
 import UilCreateDashboard from '~icons/uil/create-dashboard'
 import UilPostcard from '~icons/uil/postcard'
 import UilTwitterAlt from '~icons/uil/twitter-alt'
@@ -39,10 +39,10 @@ export const main = [
   // New menu item for pixel analytics.  This flag indicates the item
   // should only be visible to authenticated users.  The Nav component
   // can use `requiresUser` to filter items.
-  {
-    name: 'Analytics',
-    path: '/analytics',
-    icon: UilChartBar,
-    requiresUser: true,
-  },
+  // {
+  //   name: 'Analytics',
+  //   path: '/analytics',
+  //   icon: UilChartBar,
+  //   requiresUser: true,
+  // },
 ]

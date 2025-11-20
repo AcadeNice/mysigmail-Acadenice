@@ -14,10 +14,13 @@ const { isUser, loadingRole } = useAccess()
 /* ------------ Full Name → base ------------ */
 function readFullName(): string {
   const basic = installed.value?.tools?.basic ?? []
+
   const cand
-    = basic.find((f: any) => f.key === 'fullName' || f.id === 'full-name')
-      ?? basic.find((f: any) => /full\s*name/i.test(String(f?.label)))
+    = basic.find((f: any) => f.key === 'fullName')
+      ?? basic.find((f: any) => f.id === 'full-name' || f.id === 'name')
+      ?? basic.find((f: any) => /full\s*name|nom\s+complet/i.test(String(f?.label || '')))
       ?? basic[0]
+
   return (cand?.value ?? '').toString()
 }
 function toBaseName(input: string): string {
@@ -29,12 +32,68 @@ function toBaseName(input: string): string {
   s = s.replace(/_+/g, '_').replace(/^_+|_+$/g, '')
   return s
 }
+// ---------- Prefill from guest gate ----------
+const GUEST_PREFILL_KEY = 'acdn_guest_basic_prefill'
+const prefillApplied = ref(false)
 
+interface GuestPrefill {
+  fullName?: string
+  email?: string
+  enterprise?: string
+  phone?: string
+}
+
+function applyGuestPrefill(payload: GuestPrefill) {
+  const basic = installed.value?.tools?.basic ?? []
+  if (!basic.length) return
+
+  const byLabel = (label: string) =>
+    basic.find(
+      (f: any) =>
+        String(f.label || '')
+          .trim()
+          .toLowerCase() === label.toLowerCase(),
+    )
+
+  const fullNameField = byLabel('nom complet')
+  const emailField = byLabel('email')
+  const enterpriseField = byLabel('entreprise')
+
+  if (payload.fullName && fullNameField) fullNameField.value = payload.fullName
+  if (payload.email && emailField) emailField.value = payload.email
+  if (payload.enterprise && enterpriseField) enterpriseField.value = payload.enterprise
+}
+
+// reading sessionStorage, after we built /basic
+onMounted(() => {
+  if (isUser.value) return // only for guests
+
+  try {
+    const raw = sessionStorage.getItem(GUEST_PREFILL_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw) as GuestPrefill
+
+    applyGuestPrefill(data)
+    prefillApplied.value = true
+    sessionStorage.removeItem(GUEST_PREFILL_KEY)
+  } catch (e) {
+    console.error('[guest prefill] failed', e)
+  }
+})
 /* ------------ where the filename is stored in the model ------------ */
+const avatarField = computed(() => {
+  const basic = installed.value?.tools?.basic ?? []
+  return (
+    basic.find((f: any) => f.key === 'avatar' || f.id === 'avatar' || f.key === 'image')
+    ?? basic.find((f: any) => /avatar|photo|image/i.test(String(f?.label)))
+    ?? null
+  )
+})
+
 const fileName = computed<string>({
-  get: () => installed.value?.tools.basic[0].value || '',
+  get: () => (avatarField.value?.value ?? '') as string,
   set: (v: string) => {
-    if (installed.value) installed.value.tools.basic[0].value = v
+    if (avatarField.value) avatarField.value.value = v
   },
 })
 
@@ -196,7 +255,7 @@ const canUpload = computed(() => isUser.value && !isHttpUrl(imageUrl.value))
     <UiFieldForm label-position="top">
       <UiFieldFormItem
         label="Image"
-        description="Collez un lien public vers l’image ou, si vous êtes connecté, téléversez un fichier."
+        description="Collez un lien public vers l’image."
       >
         <div class="grid gap-2">
           <!-- 1) URL (for everyone) -->

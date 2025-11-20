@@ -1,10 +1,13 @@
 <!-- src/components/AuthDialog.vue -->
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useAccess } from '@/composables/useAccess'
 
 const { login } = useAccess()
+const route = useRoute()
+const router = useRouter()
 
 const open = ref(false)
 const input = ref('')
@@ -19,8 +22,18 @@ function handleTheme(e: MediaQueryListEvent) {
 // ref на обёртку вокруг инпута (ИМЕННО native <div>)
 const inputWrapRef = ref<HTMLDivElement | null>(null)
 
+function focusInput() {
+  const el = inputWrapRef.value?.querySelector<HTMLInputElement>('input[type="password"]')
+  el?.focus()
+}
+
 function handleOpenAuthDialog() {
   open.value = true
+  error.value = ''
+  input.value = ''
+  nextTick(() => {
+    focusInput()
+  })
 }
 
 onMounted(() => {
@@ -37,17 +50,21 @@ onBeforeUnmount(() => {
 
 async function tryLogin() {
   try {
-    await login(input.value)
+    await login(input.value) // тут уже внутри login() дергается refreshRole и проверяется роль
     error.value = ''
     open.value = false
+
+    // если логинились с welcome-страницы – ведём в конструктор
+    if (route.path === '/') {
+      router.push('/basic')
+    }
   } catch (e: any) {
     // 1) очищаем пароль при ошибке
     input.value = ''
     error.value = e?.message || 'Invalid password.'
     // 2) возвращаем фокус в поле
     await nextTick()
-    const el = inputWrapRef.value?.querySelector<HTMLInputElement>('input[type="password"]')
-    el?.focus()
+    focusInput()
   }
 }
 
@@ -97,7 +114,6 @@ function onKeydown(e: KeyboardEvent) {
         ref="inputWrapRef"
         class="space-y-3 mt-3"
       >
-        <!-- СТИЛЬ ПРЯМО В HTML (инлайн) -->
         <UiInput
           v-model="input"
           type="password"
@@ -106,9 +122,9 @@ function onKeydown(e: KeyboardEvent) {
           :style="
             isDark
               ? {
-                background: '#f1f5f9', // светло-серый фон
-                color: '#0f172a', // тёмные кружочки/текст
-                caretColor: '#0f172a', // тёмный курсор
+                background: '#f1f5f9',
+                color: '#0f172a',
+                caretColor: '#0f172a',
                 border: '1px solid #cbd5e1',
                 borderRadius: '8px',
                 outline: 'none',

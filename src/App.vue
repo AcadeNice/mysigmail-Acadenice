@@ -1,42 +1,72 @@
-<!-- Modified src/App.vue -->
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import 'vue-sonner/style.css'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Toaster } from 'vue-sonner'
 
 import AuthDialog from '@/components/AuthDialog.vue'
+import { useSignatures } from '@/composables/signatures/useSignatures'
 import { useAccess } from '@/composables/useAccess'
-// Import shared validation patterns instead of redefining regexes locally.  This
-// ensures consistent validation between client and server and avoids
-// duplication.
+// Import shared validation patterns instead of redefining regexes locally.
 import { EMAIL_REGEX, FR_PHONE_REGEX } from '@/utils/validators.ts'
 
 const { continueAsGuest, loadingRole, unlocked } = useAccess()
 const route = useRoute()
+const router = useRouter()
+const { installed } = useSignatures()
 
-const PUBLIC_ROUTES = ['/cgu']
+// Public routes that never auto-show the gate
+const PUBLIC_ROUTES = ['/', '/cgu']
+const GUEST_PREFILL_KEY = 'acdn_guest_basic_prefill'
 
+// Whether route-based gate should show (user not unlocked on a protected page)
 const showGate = computed(() => {
-  // on public page (/cgu), no gate
+  // on public pages, no auto gate
   if (PUBLIC_ROUTES.includes(route.path)) return false
-
   // for other pages
   return !unlocked.value
 })
 
+// Extra flag: allow forcing the gate as a modal even on public routes
+// (WelcomePage -> open-guest-gate)
+const forceGate = ref(false)
+function handleOpenGuestGate() {
+  forceGate.value = true
+}
+
+// Final visibility flag
+const gateVisible = computed(() => showGate.value || forceGate.value)
+
 /* ---------- theme: follow system preference ---------- */
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
+
+function applyThemeClass(value: boolean) {
+  const root = document.documentElement // <html>
+  if (value) root.classList.add('dark')
+  else root.classList.remove('dark')
+}
+
 function handleTheme(e: MediaQueryListEvent) {
   isDark.value = e.matches
+  applyThemeClass(isDark.value)
 }
+
 onMounted(() => {
+  // 1) initial theme from system
+  applyThemeClass(isDark.value)
+
   const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
   mq?.addEventListener?.('change', handleTheme)
+
+  // 2) listen for "Utiliser gratuitement" click from WelcomePage
+  window.addEventListener('open-guest-gate', handleOpenGuestGate)
 })
+
 onBeforeUnmount(() => {
   const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
   mq?.removeEventListener?.('change', handleTheme)
+
+  window.removeEventListener('open-guest-gate', handleOpenGuestGate)
 })
 
 /* ---------- form model ---------- */
@@ -46,8 +76,7 @@ const phoneInput = ref('')
 const enterpriseInput = ref('') // optional
 
 /* ---------- validation ---------- */
-// Track which fields have been interacted with.  This controls when
-// validation errors are displayed.
+// Track which fields have been interacted with.
 const touched = {
   name: ref(false),
   email: ref(false),
@@ -68,7 +97,7 @@ const phoneError = computed(() => {
   if (!touched.phone.value) return ''
   const v = phoneNormalized.value
   if (!v) return 'Téléphone requis'
-  return FR_PHONE_REGEX.test(v) ? '' : 'Format téléphone invalide'
+  return FR_PHONE_REGEX.test(v) ? ' ' : 'Format téléphone invalide'
 })
 
 const formValid = computed(
@@ -78,9 +107,36 @@ const formValid = computed(
     && FR_PHONE_REGEX.test(phoneNormalized.value),
 )
 
+function applyGuestToSignature(payload: {
+  fullName: string
+  email: string
+  phone: string
+  enterprise?: string
+}) {
+  const basic = installed.value?.tools?.basic ?? []
+  if (!basic.length) return
+
+  const byLabel = (label: string) =>
+    basic.find(
+      (f: any) =>
+        String(f.label || '')
+          .trim()
+          .toLowerCase() === label.toLowerCase(),
+    )
+
+  const fullNameField = byLabel('nom complet')
+  const emailField = byLabel('email')
+  const enterpriseField = byLabel('entreprise')
+
+  if (fullNameField) fullNameField.value = payload.fullName
+  if (emailField) emailField.value = payload.email
+  if (enterpriseField && payload.enterprise) enterpriseField.value = payload.enterprise
+}
+
 /* ---------- submit ---------- */
 const saving = ref(false)
 const saveErr = ref('')
+
 async function proceedAsGuest() {
   touched.name.value = true
   touched.email.value = true
@@ -110,25 +166,46 @@ async function proceedAsGuest() {
       data = null
     }
 
-    // if there is no ok:true – no guest access
     if (!res.ok || data?.ok !== true) {
       saveErr.value = data?.error || 'Erreur lors de l’enregistrement (serveur).'
       return
     }
 
-    // opens app
+    // 1) сохраним в sessionStorage (если очень хочешь оставить)
+    try {
+      sessionStorage.setItem(
+        GUEST_PREFILL_KEY,
+        JSON.stringify({
+          fullName: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneNormalized.value,
+          enterprise: enterpriseInput.value.trim(),
+        }),
+      )
+    } catch {
+      // ignore
+    }
+
+    // 2) сразу пробросим в стор подписи
+    applyGuestToSignature({
+      fullName: nameInput.value.trim(),
+      email: emailInput.value.trim(),
+      phone: phoneNormalized.value,
+      enterprise: enterpriseInput.value.trim() || undefined,
+    })
+
+    // unlock access
     continueAsGuest()
+    forceGate.value = false
+
+    if (route.path === '/') {
+      router.push('/basic')
+    }
   } catch (e: any) {
-    // net/other errors
     saveErr.value = e?.message || 'Erreur lors de l’enregistrement (réseau).'
   } finally {
     saving.value = false
   }
-}
-
-/* ---------- staff login ---------- */
-function openStaffLogin() {
-  window.dispatchEvent(new CustomEvent('open-auth-dialog'))
 }
 
 /* a11y helpers */
@@ -139,11 +216,12 @@ function markTouched(field: 'name' | 'email' | 'phone') {
 
 <template>
   <div class="contents">
-    <div v-if="!showGate">
+    <!-- When gate is not visible, just render the current route -->
+    <div v-if="!gateVisible">
       <RouterView />
     </div>
 
-    <!-- Gate -->
+    <!-- Gate (guest questionnaire) -->
     <div
       v-else
       class="fixed inset-0 z-[99999] grid place-items-center select-none"
@@ -160,34 +238,31 @@ function markTouched(field: 'name' | 'email' | 'phone') {
         <!-- Heading -->
         <h2
           id="guest-gate-title"
-          class="text-2xl font-semibold mb-1"
+          class="text-2xl font-semibold mb-1 text-center"
         >
-          AcadéNice — Signature Utility
+          AcadéNice — Générateur de signature
         </h2>
 
         <!-- Disclaimer (FR) -->
         <p
-          class="text-sm mb-4"
+          class="text-sm mb-4 text-center"
           :class="isDark ? 'text-dark-muted' : 'text-light-muted'"
         >
-          Vos données seront utilisées <strong>uniquement</strong> dans le cadre d’AcadéNice et ne
-          seront <strong>jamais</strong> partagées avec des tiers.<br>
-          <span class="inline-block mt-1">Vous pouvez continuer pour utiliser cet outil gratuitement.</span>
-          <span
-            class="block mt-1 text-[11px]"
-            :class="isDark ? 'text-[#C7CFDD]' : 'text-neutral-500'"
-          >
-            Les fichiers ne sont téléversés que par le personnel connecté, en mode invité, tout
-            reste dans votre navigateur.
+          <span class="inline-block mt-1">
+            Vous pouvez continuer pour utiliser cet outil gratuitement.
           </span>
         </p>
 
-        <!-- Guest form -->
-        <div class="grid gap-3">
-          <div>
+        <!-- Guest form -> like in  /basic -->
+        <div class="space-y-4">
+          <!-- Nom complet -->
+          <div class="space-y-1">
+            <div class="text-sm font-medium flex items-center h-7">
+              Nom complet
+            </div>
             <UiInput
               v-model="nameInput"
-              placeholder="Nom complet"
+              placeholder="Prénom Nom"
               :disabled="loadingRole || saving"
               :aria-invalid="!!nameError"
               @blur="markTouched('name')"
@@ -200,11 +275,15 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             </p>
           </div>
 
-          <div>
+          <!-- Email -->
+          <div class="space-y-1">
+            <div class="text-sm font-medium flex items-center h-7">
+              Email
+            </div>
             <UiInput
               v-model="emailInput"
               type="email"
-              placeholder="E-mail"
+              placeholder="prenom.nom@acadenice.fr"
               :disabled="loadingRole || saving"
               :aria-invalid="!!emailError"
               @blur="markTouched('email')"
@@ -217,11 +296,15 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             </p>
           </div>
 
-          <div>
+          <!-- Téléphone -->
+          <div class="space-y-1">
+            <div class="text-sm font-medium flex items-center h-7">
+              Téléphone (FR)
+            </div>
             <UiInput
               v-model="phoneInput"
               inputmode="tel"
-              placeholder="Téléphone (FR)"
+              placeholder="06 12 34 56 78"
               :disabled="loadingRole || saving"
               :aria-invalid="!!phoneError"
               @blur="markTouched('phone')"
@@ -240,10 +323,14 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             </p>
           </div>
 
-          <div>
+          <!-- Entreprise -->
+          <div class="space-y-1">
+            <div class="text-sm font-medium flex items-center h-7">
+              Entreprise (optionnel)
+            </div>
             <UiInput
               v-model="enterpriseInput"
-              placeholder="Entreprise (optionnel)"
+              placeholder="AcadéNice"
               :disabled="loadingRole || saving"
             />
           </div>
@@ -255,7 +342,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
           :disabled="loadingRole || saving || !formValid"
           @click="proceedAsGuest"
         >
-          Continuer en invité
+          Générer ma signature
         </UiButton>
 
         <!-- Error -->
@@ -268,15 +355,6 @@ function markTouched(field: 'name' | 'email' | 'phone') {
 
         <!-- Staff link + CGU link (vertical) -->
         <div class="mt-6 text-[12px] flex flex-col items-center justify-center gap-2">
-          <button
-            type="button"
-            class="underline hover:no-underline cursor-pointer"
-            :class="isDark ? 'text-dark-link' : 'text-light-link'"
-            @click="openStaffLogin"
-          >
-            Se connecter
-          </button>
-
           <RouterLink
             to="/cgu"
             class="underline hover:no-underline"

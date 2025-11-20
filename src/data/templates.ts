@@ -23,8 +23,8 @@ export function useTemplateData() {
 
   // Palette: azur/mediterranean blues + soft neutrals
   const BRAND = {
-    main: '#2A7DB8', // primary azur
-    secondary: '#1F5E8A', // darker blue
+    main: '#4CCCB8', // primary azur
+    secondary: '#4CCCB8', // darker blue
     bg: '#0F2F4A', // deep night blue
     textOnBg: '#FFFFFF',
     font: 'Inter, Segoe UI, Arial, Helvetica, sans-serif',
@@ -33,15 +33,15 @@ export function useTemplateData() {
   const DEFAULTS = {
     basic: [
       { id: nanoid(8), label: 'Avatar', type: 'image', main: true, value: '' },
-      { id: nanoid(8), label: 'Full Name', type: 'text', main: true, value: 'Prénom Nom' },
+      { id: nanoid(8), label: 'Nom complet', type: 'text', main: true, value: 'Prénom Nom' },
       {
         id: nanoid(8),
-        label: 'Job Title',
+        label: 'Intitulé du poste',
         type: 'text',
         main: true,
-        value: 'Enseignant · AcadéNice',
+        value: 'Enseignant',
       },
-      { id: nanoid(8), label: 'Company', type: 'text', main: true, value: 'AcadéNice' },
+      { id: nanoid(8), label: 'Entreprise', type: 'text', main: true, value: 'AcadéNice' },
       { id: nanoid(8), label: 'Website', type: 'link', main: true, value: 'https://acadenice.fr' },
       {
         id: nanoid(8),

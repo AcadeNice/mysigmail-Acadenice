@@ -3,31 +3,47 @@ import { createRouter, createWebHistory } from 'vue-router'
 import CguPage from '@/pages/CguPage.vue'
 
 const routes = [
+  // New welcome page on "/"
   {
     path: '/',
-    alias: ['/basic'],
-    component: () => import('@/views/Basic.vue'),
+    name: 'welcome',
+    component: () => import('@/views/WelcomePage.vue'),
     meta: {
-      title: 'Basic signature details',
+      title: 'AcadéNice — Générateur de signature',
+      public: true,
     },
   },
+
+  // Main app entry (Basic) – now only on /basic
+  {
+    path: '/basic',
+    alias: [], // no alias "/"
+    component: () => import('@/views/Basic.vue'),
+    meta: {
+      title: 'Détails de signature de base',
+    },
+  },
+
   {
     path: '/cgu',
     name: 'cgu',
     component: CguPage,
+    meta: {
+      public: true,
+    },
   },
   {
     path: '/social',
     component: () => import('@/views/Social.vue'),
     meta: {
-      title: 'Social media links',
+      title: 'Liens vers les réseaux sociaux',
     },
   },
   {
     path: '/options',
     component: () => import('@/views/Options.vue'),
     meta: {
-      title: 'Signature options',
+      title: 'Options de signature',
     },
   },
   {
@@ -44,14 +60,13 @@ const routes = [
       title: 'Templates',
     },
   },
-  // New route for pixel analytics
-  {
-    path: '/analytics',
-    component: () => import('@/views/PixelAnalytics.vue'),
-    meta: {
-      title: 'Pixel analytics',
-    },
-  },
+  // {
+  //   path: '/analytics',
+  //   component: () => import('@/views/PixelAnalytics.vue'),
+  //   meta: {
+  //     title: 'Pixel analytics',
+  //   },
+  // },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/',

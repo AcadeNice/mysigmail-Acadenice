@@ -42,10 +42,7 @@ const finalUrl = computed(() => {
 
 <template>
   <template v-if="show">
-    <Base.Table
-      width="0"
-      style="mso-table-lspace: 0pt; mso-table-rspace: 0pt"
-    >
+    <Base.Table width="0">
       <tr>
         <td style="padding: 0; margin: 0; line-height: 0">
           <img
