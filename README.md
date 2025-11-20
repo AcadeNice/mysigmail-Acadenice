@@ -6,7 +6,6 @@
   </picture>
 </p>
 
-
 <h1 align="center">MySigMail – Fork Acadénice</h1>
 <p align="center">
   <strong>Générateur de signatures e-mail open source (Gmail, Outlook, Apple Mail, etc.).</strong>

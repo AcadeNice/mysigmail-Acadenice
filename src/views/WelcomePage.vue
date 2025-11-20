@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 
 // CTA that should open the guest data form (your gate modal)
 function openGuestGate() {
@@ -31,11 +31,10 @@ function onMouseMove(e: MouseEvent) {
   const centerX = rect.width / 2
   const centerY = rect.height / 2
 
-  // -1..1 по обеим осям
   const percentX = (x - centerX) / centerX
   const percentY = (y - centerY) / centerY
 
-  const maxTilt = 10 // градусов
+  const maxTilt = 10 // degree
   tiltY.value = maxTilt * percentX
   tiltX.value = -maxTilt * percentY
 }
@@ -44,24 +43,55 @@ function resetTilt() {
   tiltX.value = 0
   tiltY.value = 0
 }
+// ---- header on scroll ----
+const scrolled = ref(false)
+const scrollProgress = ref(0)
+
+function handleScroll() {
+  const doc = document.documentElement
+  const total = doc.scrollHeight - doc.clientHeight
+  scrollProgress.value = total > 0 ? (window.scrollY / total) * 100 : 0
+  scrolled.value = window.scrollY > 10
+}
+
+onMounted(() => {
+  handleScroll()
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div class="relative overflow-hidden min-h-screen bg-background text-foreground">
     <!-- Header -->
-    <header class="fixed inset-x-0 top-0 z-20">
+    <header
+      class="fixed inset-x-0 top-0 z-20 transition-all"
+      :class="[
+        scrolled ? 'backdrop-blur-lg bg-background/80 border-b border-border shadow-sm' : '',
+      ]"
+    >
+      <!-- Прогресс-бар чтения -->
+      <div class="h-0.5 w-full bg-border/40">
+        <div
+          class="h-full bg-primary transition-[width] duration-150"
+          :style="{ width: `${scrollProgress}%` }"
+        />
+      </div>
+
       <a
         href="https://acadenice.fr"
         target="_blank"
         rel="noreferrer"
-        class="hidden w-screen items-center justify-center gap-x-2 bg-primary text-xl font-bold leading-relaxed text-primary-foreground lg:flex"
-        style="height: 32px"
+        class="hidden h-8 w-screen items-center justify-center gap-x-2 bg-primary text-xl font-bold leading-relaxed text-primary-foreground lg:flex transition-[height] duration-300 ease-in-out hover:h-10"
       >
         <span>N'oubliez pas de visiter le site de l'AcadéNice !</span>
       </a>
 
       <div
-        class="bg-primary py-3 lg:bg-transparent lg:bg-gradient-to-b lg:from-primary lg:to-transparent lg:bg-blend-multiply lg:backdrop-blur-md xl:bg-gradient-to-b xl:from-background xl:to-transparent xl:backdrop-blur-none"
+        class="bg-primary py-3 lg:bg-transparent lg:bg-gradient-to-b lg:from-primary lg:to-transparent lg:bg-blend-multiply lg:backdrop-blur-md xl:bg-gradient-to-b xl:from-background xl:to-transparent xl:backdrop-blur-none transition-[padding] duration-300 ease-in-out hover:py-4"
       >
         <div class="container flex max-w-screen-2xl items-center justify-between px-4 lg:px-6">
           <!-- Logo -->
