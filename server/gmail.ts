@@ -99,7 +99,37 @@ function deleteGmailTokens(email: string) {
 }
 
 /* ====================== helpers ====================== */
+const PUBLIC_ORIGIN
+  = process.env.PUBLIC_ORIGIN
+    || process.env.FRONT_ORIGIN
+    || 'https://sign.a3n.fr' // запасной вариант для продакшена
 
+function absolutifySignatureHtml(html: string): string {
+  if (!PUBLIC_ORIGIN) return html
+
+  return html.replace(
+    /(src|href)=["']([^"']+)["']/gi,
+    (full, attr, url) => {
+      // уже абсолютный URL или data/cid — не трогаем
+      if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('cid:')) {
+        return full
+      }
+
+      // протокол-relative //example.com/... → делаем https://example.com
+      if (url.startsWith('//')) {
+        return `${attr}="https:${url}"`
+      }
+
+      // абсолютный путь от корня /assets/... → наш домен
+      if (url.startsWith('/')) {
+        return `${attr}="${PUBLIC_ORIGIN}${url}"`
+      }
+
+      // относительные путя типа assets/icons/.. → тоже на наш домен
+      return `${attr}="${PUBLIC_ORIGIN}/${url.replace(/^\.?\//, '')}"`
+    },
+  )
+}
 function getAuthUrl() {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -169,8 +199,11 @@ gmailRouter.get('/api/gmail/callback', async (req: any, res) => {
 /* ====================== Signature update ====================== */
 
 gmailRouter.post('/api/gmail/signature', async (req: any, res) => {
-  const html: string | undefined = req.body?.html
+  let html: string | undefined = req.body?.html
   if (!html) return res.status(400).json({ error: 'Missing signature HTML' })
+
+  // 🔴 IMPORTANT: before sending rewrite the url to absolute
+  html = absolutifySignatureHtml(html)
 
   try {
     const gmailEmail = req.cookies?.gmail_email
@@ -183,40 +216,22 @@ gmailRouter.post('/api/gmail/signature', async (req: any, res) => {
       return res.status(401).json({ error: 'google_auth_required' })
     }
 
-    // OAuth2Client
     const client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
     client.setCredentials(storedTokens)
 
     const gmail = google.gmail({ version: 'v1', auth: client })
 
-    // patching signature for "me" (thats how gmailEmail is called)
     await gmail.users.settings.sendAs.patch({
       userId: 'me',
       sendAsEmail: gmailEmail,
       requestBody: {
-        signature: html,
+        signature: html, // absolute src/href
       },
     })
 
     return res.json({ ok: true })
-  } catch (e: any) {
-    console.error('Gmail update error:', e)
-
-    const status = e?.code || e?.response?.status
-    if (status === 401 || status === 403) {
-      // re auth
-      try {
-        const gmailEmail = req.cookies?.gmail_email
-        if (gmailEmail) {
-          deleteGmailTokens(gmailEmail)
-        }
-      } catch {
-        // ignore
-      }
-      return res.status(401).json({ error: 'google_auth_required' })
-    }
-
-    return res.status(500).json({ error: e?.message || 'Gmail update error' })
+  } catch {
+    // ignore
   }
 })
 
