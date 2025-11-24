@@ -9,7 +9,7 @@ import { useImageVersion } from '@/composables/useImageVersion'
 
 const props = defineProps<Props>()
 
-// ⬇️ Подтягиваем роль с сервера (простой локальный флаг)
+// getting role
 const isUser = ref(false)
 async function fetchRole() {
   try {
@@ -24,7 +24,7 @@ onMounted(fetchRole)
 
 interface Props {
   show?: boolean
-  src?: string // "john_doe.png" ИЛИ полный URL
+  src?: string // "john_doe.png" or full url
   size?: number
   shape?: AvatarShape
   tdStyle?: HTMLAttributes['style']
@@ -47,11 +47,11 @@ const resolvedSrc = computed(() => {
   const s = (props.src ?? '').trim()
   if (!s) return ''
 
-  // Если это полный URL — можно показывать всем
+  // showing to everyone if its url
   if (isHttp(s)) return `${s}${s.includes('?') ? '&' : '?'}v=${imageVersion.value || 0}`
 
-  // Если это локальный файл (например "thomas.png") — показываем ТОЛЬКО юзеру
-  if (!isUser.value) return '' // гость увидит плейсхолдер
+  // local files ONLY to users
+  if (!isUser.value) return '' // placeholder for guests
 
   return `${publicBase}/uploads/${s}?v=${imageVersion.value || 0}`
 })

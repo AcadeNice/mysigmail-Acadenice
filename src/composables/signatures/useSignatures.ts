@@ -22,11 +22,11 @@ const isInit = ref(false)
 const selectedIdStore = useStorage('selected-signature-id', '')
 const unsavedSignatureStore = useStorage('unsaved-signature', '')
 
-/** ========= Основное реактивное состояние ========= */
+/** ========= reactive base ========= */
 const selectedId = ref<string>()
 const installed = ref<Signature>(templates[0])
 
-/** ========= Базовые вычисления ========= */
+/** ========= basic ========= */
 const mainFields = computed(() => installed.value.tools.basic.filter((i) => i.type !== 'image'))
 const isMainFieldsEmpty = computed(() => mainFields.value.every((i) => !i.value))
 const imageField = computed(() => installed.value.tools.basic[0].value)
@@ -91,7 +91,7 @@ const isColumnSizeAvailable = computed(() => {
   return available.includes(installed.value.name)
 })
 
-/** ========= Утилиты по аддонам/соцкам ========= */
+/** ========= addon util ========= */
 function isAddonTool(type: Addon) {
   return installed.value.tools.addons.some((i) => i.type === type)
 }
@@ -129,7 +129,7 @@ function setSocialValue(type: Social, value: string) {
   if (social) social.value = value
 }
 
-/** ========= Шаблоны ========= */
+/** ========= templates ========= */
 function resetInstalledToDefault() {
   installed.value = clone(templates[0])
   installed.value.tools.basic.forEach((i) => (i.value = ''))
@@ -220,18 +220,21 @@ async function uploadJSON(json: string) {
   installed.value = stripBannerIfGuest(data as Signature)
 }
 
-/** ========= Инициализация / autosave ========= */
+/** ========= init / autosave ========= */
 function init() {
+  if (isInit.value) return
+  isInit.value = true
+
   const unsavedSignature = unsavedSignatureStore.value
-  if (unsavedSignature) {
-    try {
-      const data = JSON.parse(unsavedSignature) as Signature
-      installed.value = stripBannerIfGuest(data)
-      unsavedSignatureStore.value = ''
-    } catch (err) {
-      console.error(err)
-      resetInstalledToDefault()
-    }
+  if (!unsavedSignature) return
+
+  try {
+    const data = JSON.parse(unsavedSignature) as Signature
+    installed.value = stripBannerIfGuest(data)
+    // unsavedSignatureStore.value = ''
+  } catch (err) {
+    console.error(err)
+    resetInstalledToDefault()
   }
 }
 
@@ -239,8 +242,7 @@ watch(installed, () => (unsavedSignatureStore.value = JSON.stringify(installed.v
   deep: true,
 })
 
-/** ========= ГОСТЕВОЙ ОВЕРРАЙД ДЛЯ БАННЕРА ========= */
-/** Хранится отдельно в localStorage и используется ТОЛЬКО для гостей */
+/** ========= guest banner ========= */
 interface GuestBanner {
   image: string
   link: string
@@ -252,11 +254,6 @@ const guestBanner = useStorage<GuestBanner>('guest-banner', {
   width: 100,
 })
 
-/**
- * Эффективные геттер/патчер баннера:
- *  - user → читаем/пишем обычный аддон banner
- *  - guest → читаем/пишем guestBanner (localStorage)
- */
 function getBannerEffective(): AddonBanner {
   if (isUser.value) {
     return (getAddonValue<AddonBanner>('banner') ?? {
@@ -276,8 +273,6 @@ function patchBannerEffective<K extends keyof AddonBanner>(key: K, value: AddonB
   }
 }
 
-/** ========= «Эффективный» пиксель трекинга ========= */
-/** Для гостя всегда выключен; для user — берём реальные значения. */
 function getTrackingPixelEffective(): AddonTrackingPixel {
   const v = getAddonValue<AddonTrackingPixel>('trackingPixel')
   if (!v || typeof v !== 'object') return { url: '', enabled: false }
@@ -287,7 +282,7 @@ function getTrackingPixelEffective(): AddonTrackingPixel {
   return { url, enabled }
 }
 
-/** ========= Экспорт стора ========= */
+/** ========= store export ========= */
 export function useSignatures() {
   return {
     addons,
@@ -324,12 +319,12 @@ export function useSignatures() {
     socials,
     uploadJSON,
 
-    // Баннер (эффективный API)
+    // banner
     getBannerEffective,
     patchBannerEffective,
     guestBanner,
 
-    // Пиксель (эффективный API)
+    // pixel
     getTrackingPixelEffective,
   }
 }

@@ -33,7 +33,7 @@ export function useTemplateData() {
   const DEFAULTS = {
     basic: [
       { id: nanoid(8), label: 'Avatar', type: 'image', main: true, value: '' },
-      { id: nanoid(8), label: 'Nom complet', type: 'text', main: true, value: 'Prénom Nom' },
+      { id: nanoid(8), label: 'Nom complet', type: 'text', main: true, value: 'Nom Prénom' },
       {
         id: nanoid(8),
         label: 'Intitulé du poste',

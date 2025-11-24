@@ -99,36 +99,30 @@ function deleteGmailTokens(email: string) {
 }
 
 /* ====================== helpers ====================== */
-const PUBLIC_ORIGIN
-  = process.env.PUBLIC_ORIGIN
-    || process.env.FRONT_ORIGIN
-    || 'https://sign.a3n.fr' // запасной вариант для продакшена
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || process.env.FRONT_ORIGIN || 'https://sign.a3n.fr' // fallback for prod
 
 function absolutifySignatureHtml(html: string): string {
   if (!PUBLIC_ORIGIN) return html
 
-  return html.replace(
-    /(src|href)=["']([^"']+)["']/gi,
-    (full, attr, url) => {
-      // уже абсолютный URL или data/cid — не трогаем
-      if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('cid:')) {
-        return full
-      }
+  return html.replace(/(src|href)=["']([^"']+)["']/gi, (full, attr, url) => {
+    // уже абсолютный URL или data/cid — не трогаем
+    if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('cid:')) {
+      return full
+    }
 
-      // протокол-relative //example.com/... → делаем https://example.com
-      if (url.startsWith('//')) {
-        return `${attr}="https:${url}"`
-      }
+    // protocol-relative //example.com/... →  https://example.com
+    if (url.startsWith('//')) {
+      return `${attr}="https:${url}"`
+    }
 
-      // абсолютный путь от корня /assets/... → наш домен
-      if (url.startsWith('/')) {
-        return `${attr}="${PUBLIC_ORIGIN}${url}"`
-      }
+    // absolute path /assets/... → our domain
+    if (url.startsWith('/')) {
+      return `${attr}="${PUBLIC_ORIGIN}${url}"`
+    }
 
-      // относительные путя типа assets/icons/.. → тоже на наш домен
-      return `${attr}="${PUBLIC_ORIGIN}/${url.replace(/^\.?\//, '')}"`
-    },
-  )
+    // relative path assets/icons/.. → our domain
+    return `${attr}="${PUBLIC_ORIGIN}/${url.replace(/^\.?\//, '')}"`
+  })
 }
 function getAuthUrl() {
   return oauth2Client.generateAuthUrl({
@@ -156,7 +150,7 @@ gmailRouter.get('/api/gmail/auth', (_req, res) => {
 
 /* ====================== OAuth callback ====================== */
 
-// Callback after Google login: getting tokens + привязка к конкретному Gmail
+// Callback after Google login: getting tokens + linking
 gmailRouter.get('/api/gmail/callback', async (req: any, res) => {
   const code = req.query.code
   if (!code || typeof code !== 'string') {

@@ -60,27 +60,22 @@ app.post('/api/auth/login', loginLimiter, (req, res) => {
     // Debug: log the raw request body to see what we're receiving
     console.log('Login request body type:', typeof req.body)
     console.log('Login request body keys:', Object.keys(req.body || {}))
-    
     const raw = req.body?.password ?? ''
     const password = typeof raw === 'string' ? raw.trim() : ''
-    
     // Debug: log lengths and compare (without exposing the password)
     const expectedLen = ADMIN_PASSWORD.length
     const receivedLen = password.length
-    
     // Debug: log first and last character codes (for debugging without exposing password)
     const expectedFirst = ADMIN_PASSWORD.charCodeAt(0)
     const expectedLast = ADMIN_PASSWORD.charCodeAt(ADMIN_PASSWORD.length - 1)
     const receivedFirst = password.charCodeAt(0)
     const receivedLast = password.charCodeAt(password.length - 1)
-    
     console.log(
       `Login attempt: received length ${receivedLen}, expected length ${expectedLen}`,
       `received type: ${typeof raw}, after trim: ${password.length}`,
       `first char codes: received=${receivedFirst}, expected=${expectedFirst}`,
       `last char codes: received=${receivedLast}, expected=${expectedLast}`,
     )
-    
     if (password !== ADMIN_PASSWORD) {
       console.warn(
         `Login attempt failed: received length ${receivedLen}, expected length ${expectedLen}`,

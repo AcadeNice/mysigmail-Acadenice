@@ -317,7 +317,7 @@ watch(openDialog, (open) => {
         File: <strong>{{ existingFile || `${baseName}.*` }}</strong>
       </template>
       <template v-else-if="isDefaultFullName">
-        Remplacez « Prénom Nom » par vos véritables prénom et nom.
+        Remplacez « Nom Prénom » par vos véritables prénom et nom.
       </template>
       <template v-else> Remplissez d'abord le nom complet. </template>
     </span>

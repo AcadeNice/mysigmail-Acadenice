@@ -9,7 +9,7 @@ import process from 'node:process'
 const uploadDir = path.join(process.cwd(), 'uploads')
 fs.mkdirSync(uploadDir, { recursive: true })
 
-// public/assets для баннера
+// public/assets for banner
 const publicAssetsDir = path.join(process.cwd(), 'public', 'assets')
 fs.mkdirSync(publicAssetsDir, { recursive: true })
 
@@ -39,7 +39,7 @@ function extFromMime(m: string): string {
   return '.jpg'
 }
 
-/* ---------- Аватарки (как было) ---------- */
+/* ---------- Avatars ---------- */
 const avatarStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
   filename: (req: Request, file, cb) => {

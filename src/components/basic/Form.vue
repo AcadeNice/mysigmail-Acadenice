@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 
 import { useSignatures } from '@/composables/signatures/useSignatures'
 import { useAccess } from '@/composables/useAccess'
@@ -7,7 +7,7 @@ import { useImageVersion } from '@/composables/useImageVersion'
 import { useSonner } from '@/composables/useSonner'
 
 const { sonner } = useSonner()
-const { installed, mainFields } = useSignatures()
+const { init, installed, isInit, mainFields } = useSignatures()
 const { imageVersion } = useImageVersion()
 const { isUser, loadingRole } = useAccess()
 
@@ -67,7 +67,10 @@ function applyGuestPrefill(payload: GuestPrefill) {
 // reading sessionStorage, after we built /basic
 onMounted(() => {
   if (isUser.value) return // only for guests
-
+  // filling the form if data lost (with data saved before)
+  if (!isInit.value) {
+    init()
+  }
   try {
     const raw = sessionStorage.getItem(GUEST_PREFILL_KEY)
     if (!raw) return
@@ -130,8 +133,8 @@ watch(
 const baseName = computed(() => toBaseName(fullName.value))
 const isDefaultFullName = computed(
   () =>
-    fullName.value.trim().toLowerCase() === 'prénom nom'
-    || fullName.value.trim().toLowerCase() === 'prenom nom',
+    fullName.value.trim().toLowerCase() === 'nom prénom'
+    || fullName.value.trim().toLowerCase() === 'nom prenom',
 )
 
 const existingFile = ref<string>('')
@@ -279,7 +282,7 @@ const canUpload = computed(
           <!-- 2) Upload (only for user and only if no URL is selected) -->
           <div
             v-if="canUpload"
-            lass="flex items-center gap-2"
+            class="flex items-center gap-2"
           >
             <UiUpload
               :disabled="!baseName || checking || loadingRole"

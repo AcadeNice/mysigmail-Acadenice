@@ -17,6 +17,7 @@ const { installed } = useSignatures()
 
 // Public routes that never auto-show the gate
 const PUBLIC_ROUTES = ['/', '/cgu']
+const PROTECTED_ROUTES = ['/basic', '/social', '/options', '/addons', '/templates']
 const GUEST_PREFILL_KEY = 'acdn_guest_basic_prefill'
 
 // Whether route-based gate should show (user not unlocked on a protected page)
@@ -69,12 +70,19 @@ onBeforeUnmount(() => {
   window.removeEventListener('open-guest-gate', handleOpenGuestGate)
 })
 
-/* ---------- авто-редирект с / на /basic, если уже разблокировано ---------- */
+/* ---------- auto redirect from / to /basic ---------- */
 watch(
   () => ({ unlocked: unlocked.value, path: route.path }),
   ({ path, unlocked }) => {
+    // 1) already unlocked gate → going /basic
     if (unlocked && path === '/') {
       router.replace('/basic')
+      return
+    }
+
+    // 2) not yet passed gate → cant sit on private routes
+    if (!unlocked && PROTECTED_ROUTES.includes(path)) {
+      router.replace('/')
     }
   },
   { immediate: true },
@@ -215,7 +223,7 @@ async function proceedAsGuest() {
       return
     }
 
-    // 1) сохраним в sessionStorage
+    // 1)  sessionStorage
     try {
       sessionStorage.setItem(
         GUEST_PREFILL_KEY,
@@ -230,7 +238,6 @@ async function proceedAsGuest() {
       // ignore
     }
 
-    // 2) сразу пробросим в стор подписи
     applyGuestToSignature({
       fullName: safeName,
       email: emailInput.value.trim(),
@@ -306,7 +313,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             </div>
             <UiInput
               v-model="nameInput"
-              placeholder="Prénom Nom"
+              placeholder="Nom Prénom"
               :maxlength="MAX_LENGTH"
               :disabled="loadingRole || saving"
               :aria-invalid="!!nameError"
