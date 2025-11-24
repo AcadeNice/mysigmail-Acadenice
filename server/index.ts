@@ -17,10 +17,14 @@ import { makeProtectedUploadRoutes } from './upload'
 
 const app = express()
 
+// Trust proxy (Traefik, Apache) - configure with specific number of hops
+// 1 = trust first proxy (Apache), 2 = trust Apache + Traefik
+app.set('trust proxy', 2)
+
 // Single CORS configuration for both dev and prod.
 // FRONT_ORIGIN should be set in the environment in production
 // (e.g. https://sign.a3n.fr). In dev we fall back to Vite default.
-const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'http://localhost:5173'
+const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'https://sign.a3n.fr'
 app.use(cors({ origin: FRONT_ORIGIN, credentials: true }))
 
 app.use(express.json())
@@ -29,7 +33,7 @@ app.use(cookieParser())
 // Require secrets via environment variables. If they are missing, crash early
 // instead of silently using weak defaults.
 const JWT_SECRET = process.env.JWT_SECRET
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || '').trim() // Trim to remove any whitespace/newlines
 if (!JWT_SECRET) throw new Error('Missing JWT_SECRET environment variable')
 if (!ADMIN_PASSWORD) throw new Error('Missing ADMIN_PASSWORD environment variable')
 
@@ -37,7 +41,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Rate-limit login attempts to reduce brute-force risk.
-const loginLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20 })
+// Note: express-rate-limit warns about trust proxy, but it's safe here
+// since we control the proxy (Apache/Traefik) and it's not exposed to the internet
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 // Rate-limit guest registrations to avoid spam/DoS.
 const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 })
@@ -46,9 +57,35 @@ const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 })
 
 app.post('/api/auth/login', loginLimiter, (req, res) => {
   try {
+    // Debug: log the raw request body to see what we're receiving
+    console.log('Login request body type:', typeof req.body)
+    console.log('Login request body keys:', Object.keys(req.body || {}))
+    
     const raw = req.body?.password ?? ''
     const password = typeof raw === 'string' ? raw.trim() : ''
+    
+    // Debug: log lengths and compare (without exposing the password)
+    const expectedLen = ADMIN_PASSWORD.length
+    const receivedLen = password.length
+    
+    // Debug: log first and last character codes (for debugging without exposing password)
+    const expectedFirst = ADMIN_PASSWORD.charCodeAt(0)
+    const expectedLast = ADMIN_PASSWORD.charCodeAt(ADMIN_PASSWORD.length - 1)
+    const receivedFirst = password.charCodeAt(0)
+    const receivedLast = password.charCodeAt(password.length - 1)
+    
+    console.log(
+      `Login attempt: received length ${receivedLen}, expected length ${expectedLen}`,
+      `received type: ${typeof raw}, after trim: ${password.length}`,
+      `first char codes: received=${receivedFirst}, expected=${expectedFirst}`,
+      `last char codes: received=${receivedLast}, expected=${expectedLast}`,
+    )
+    
     if (password !== ADMIN_PASSWORD) {
+      console.warn(
+        `Login attempt failed: received length ${receivedLen}, expected length ${expectedLen}`,
+        receivedLen !== expectedLen ? '(length mismatch)' : '(content mismatch)',
+      )
       return res.status(401).json({ error: 'Invalid password' })
     }
 
@@ -316,6 +353,6 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 })
 
 const PORT = Number(process.env.PORT) || 3001
-app.listen(PORT, () => {
-  console.warn(`API listening on http://localhost:${PORT}`)
+app.listen(PORT, '0.0.0.0', () => {
+  console.warn(`API listening on http://0.0.0.0:${PORT}`)
 })

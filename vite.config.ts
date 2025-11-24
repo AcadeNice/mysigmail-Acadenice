@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   //  env-files (.env, .env.development, .env.production и т.д.)
   const env = loadEnv(mode, process.cwd(), '')
 
-  const apiTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:3001'
+  const apiTarget = env.VITE_API_PROXY_TARGET || 'https://sign.a3n.fr'
 
   return {
     plugins: [

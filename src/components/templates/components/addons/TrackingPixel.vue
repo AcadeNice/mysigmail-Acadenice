@@ -29,7 +29,7 @@ const finalUrl = computed(() => {
     // корректно соберём query
     const u = new URL(
       base,
-      typeof window !== 'undefined' ? window.location.origin : 'http://local/',
+      typeof window !== 'undefined' ? window.location.origin : 'https://sign.a3n.fr',
     )
     const rcpt = (pixel.value.recipient || '').trim()
     if (rcpt) u.searchParams.set('rcpt', rcpt)
