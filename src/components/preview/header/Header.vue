@@ -18,6 +18,7 @@ const { sonner } = useSonner()
 // roles (guest / user)
 const { isUser } = useAccess()
 
+const disconnectingSite = ref(false)
 const inputRef = ref<HTMLInputElement>()
 const loadingGmail = ref(false)
 const disconnectingGmail = ref(false)
@@ -151,6 +152,67 @@ async function disconnectGoogle() {
     disconnectingGmail.value = false
   }
 }
+
+async function disconnectSite() {
+  disconnectingSite.value = true
+  try {
+    // 1) exiting Google (if we had one)
+    try {
+      await fetch('/api/gmail/disconnect', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // ignore if its not a case
+    }
+
+    // 2) admin logout (removing httpOnly access_token)
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // ignore
+    }
+
+    // 3) clearing client-side storage
+    try {
+      // sessionStorage — guest prefill
+      sessionStorage.clear()
+
+      // localStorage — only ours
+      const keysToClearPrefixes = ['acdn_', 'sign_', 'signature_', 'acadenice_']
+      for (const key of Object.keys(localStorage)) {
+        if (keysToClearPrefixes.some((p) => key.startsWith(p))) {
+          localStorage.removeItem(key)
+        }
+      }
+    } catch {
+      // nothing
+    }
+
+    // 4) updating UI / role
+    gmailConnected.value = false
+
+    sonner({
+      title: 'Déconnexion complète',
+      type: 'success',
+      description: 'Votre session et la connexion Google ont été réinitialisées.',
+    })
+
+    // forwarding to  /
+    window.location.href = '/'
+  } catch (e: any) {
+    sonner({
+      title: 'Erreur',
+      type: 'error',
+      description: e?.message || 'Impossible de se déconnecter complètement.',
+    })
+  } finally {
+    disconnectingSite.value = false
+  }
+}
 </script>
 
 <template>
@@ -173,7 +235,6 @@ async function disconnectGoogle() {
         <UilGoogle class="mr-1 w-4 h-4" />
         {{ loadingGmail ? 'Gmail…' : 'Add to Gmail' }}
       </UiButton>
-
       <!-- Déconnecter Google -->
       <UiButton
         v-if="gmailConnected"
@@ -204,6 +265,14 @@ async function disconnectGoogle() {
           </UiDropdownMenuItem>
         </UiDropdownMenuContent>
       </UiDropdownMenu>
+      <!-- Déconnexion complète du site -->
+      <UiButton
+        variant="destructive"
+        :disabled="disconnectingSite"
+        @click="disconnectSite"
+      >
+        {{ disconnectingSite ? 'Déconnexion en cours…' : 'Se déconnecter' }}
+      </UiButton>
     </div>
   </div>
 

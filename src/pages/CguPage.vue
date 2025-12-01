@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({ name: 'CguPage' })
+
+const router = useRouter()
 
 const lang = ref<'fr' | 'en'>('fr')
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 
 function toggleLang() {
   lang.value = lang.value === 'fr' ? 'en' : 'fr'
+}
+
+function goBack() {
+  // can be router.back(), but push('/') is easier to manage
+  router.push('/')
 }
 
 function handleTheme(e: MediaQueryListEvent) {
@@ -30,18 +38,35 @@ onBeforeUnmount(() => {
     class="min-h-screen"
     :class="isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'"
   >
-    <button
-      type="button"
-      class="fixed left-2 top-4 h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition z-50 border cursor-pointer"
-      :class="
-        isDark
-          ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
-          : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
-      "
-      @click="toggleLang"
-    >
-      {{ lang === 'fr' ? 'FR' : 'EN' }}
-    </button>
+    <div class="fixed left-2 top-4 flex gap-2 z-50">
+      <!-- back -->
+      <button
+        type="button"
+        class="h-9 px-3 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition border cursor-pointer"
+        :class="
+          isDark
+            ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
+            : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
+        "
+        @click="goBack"
+      >
+        ← Retour
+      </button>
+
+      <!-- lang -->
+      <button
+        type="button"
+        class="h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition border cursor-pointer"
+        :class="
+          isDark
+            ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
+            : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
+        "
+        @click="toggleLang"
+      >
+        {{ lang === 'fr' ? 'FR' : 'EN' }}
+      </button>
+    </div>
     <div class="max-w-4xl mx-auto px-4 py-8 relative">
       <!-- ---------- VERSION FRANÇAISE ---------- -->
       <div v-if="lang === 'fr'">

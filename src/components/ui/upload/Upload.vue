@@ -240,12 +240,12 @@ async function uploadImage() {
 
     existingFile.value = data.filename || finalName
 
-    // 🔥 важное место — обновляем версию для bust кэша
+    // !!!important  — updating version for bust cache
     if (data.mtime) {
-      // если сервер отдаёт timestamp
+      // server timestamp
       imageVersion.value = Math.floor(data.mtime)
     } else {
-      // fallback — просто текущее время
+      // fallback — current timestamp
       imageVersion.value = Date.now()
     }
 

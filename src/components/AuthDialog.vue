@@ -13,13 +13,13 @@ const open = ref(false)
 const input = ref('')
 const error = ref('')
 
-// автоопределение темы по системе
+// user theme auto detection
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 function handleTheme(e: MediaQueryListEvent) {
   isDark.value = e.matches
 }
 
-// ref на обёртку вокруг инпута (ИМЕННО native <div>)
+// ref wrap around input (EXACTLY native!!! <div>)
 const inputWrapRef = ref<HTMLDivElement | null>(null)
 
 function focusInput() {
@@ -50,19 +50,18 @@ onBeforeUnmount(() => {
 
 async function tryLogin() {
   try {
-    await login(input.value) // тут уже внутри login() дергается refreshRole и проверяется роль
+    await login(input.value) // right here inside of login() getting refreshRole and verifying
     error.value = ''
     open.value = false
 
-    // если логинились с welcome-страницы – ведём в конструктор
     if (route.path === '/') {
       router.push('/basic')
     }
   } catch (e: any) {
-    // 1) очищаем пароль при ошибке
+    // 1) clearing role if we're getting an error
     input.value = ''
     error.value = e?.message || 'Invalid password.'
-    // 2) возвращаем фокус в поле
+    // 2) focus
     await nextTick()
     focusInput()
   }
@@ -130,7 +129,7 @@ function onKeydown(e: KeyboardEvent) {
 </template>
 
 <style scoped>
-/* ===== Кнопка закрытия — чтобы была видима и в дарке ===== */
+/* ===== close button ===== */
 .ui-close-btn {
   position: absolute;
   top: 16px;

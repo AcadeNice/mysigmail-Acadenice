@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 // CTA that should open the guest data form (your gate modal)
 function openGuestGate() {
@@ -11,19 +11,19 @@ function openStaffAccess() {
   window.dispatchEvent(new CustomEvent('open-auth-dialog'))
 }
 
-/* ---------- 3D tilt for the image ---------- */
+/* ---------- 3D tilt  ---------- */
 
-const tiltX = ref(0)
-const tiltY = ref(0)
 const tiltWrapper = ref<HTMLElement | null>(null)
+const enableTilt = ref(true)
 
-const tiltStyle = computed(() => ({
-  transform: `perspective(1200px) rotateX(${tiltX.value}deg) rotateY(${tiltY.value}deg) scale3d(1.02,1.02,1.02)`,
-}))
+let frameId: number | null = null
+let lastEvent: MouseEvent | null = null
 
-function onMouseMove(e: MouseEvent) {
+function updateTilt() {
+  frameId = null
   const el = tiltWrapper.value
-  if (!el) return
+  const e = lastEvent
+  if (!el || !e) return
 
   const rect = el.getBoundingClientRect()
   const x = e.clientX - rect.left
@@ -35,15 +35,29 @@ function onMouseMove(e: MouseEvent) {
   const percentY = (y - centerY) / centerY
 
   const maxTilt = 10 // degree
-  tiltY.value = maxTilt * percentX
-  tiltX.value = -maxTilt * percentY
+  const tiltY = maxTilt * percentX
+  const tiltX = -maxTilt * percentY
+
+  el.style.transform = `perspective(1200px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02,1.02,1.02)`
+}
+
+function onMouseMove(e: MouseEvent) {
+  if (!enableTilt.value) return
+  lastEvent = e
+  if (frameId == null) {
+    frameId = window.requestAnimationFrame(updateTilt)
+  }
 }
 
 function resetTilt() {
-  tiltX.value = 0
-  tiltY.value = 0
+  const el = tiltWrapper.value
+  if (!el) return
+  lastEvent = null
+  el.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)'
 }
-// ---- header on scroll ----
+
+/* ---------- header on scroll ---------- */
+
 const scrolled = ref(false)
 const scrollProgress = ref(0)
 
@@ -55,12 +69,26 @@ function handleScroll() {
 }
 
 onMounted(() => {
+  // tilt only for "normal" mouse
+  try {
+    const mqPointerFine = window.matchMedia?.('(pointer: fine)')
+    const mqReduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+
+    if (mqPointerFine && !mqPointerFine.matches) enableTilt.value = false
+    if (mqReduce && mqReduce.matches) enableTilt.value = false
+  } catch {
+    // ignore
+  }
+
   handleScroll()
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
+  if (frameId != null) {
+    cancelAnimationFrame(frameId)
+  }
 })
 </script>
 
@@ -73,7 +101,7 @@ onBeforeUnmount(() => {
         scrolled ? 'backdrop-blur-lg bg-background/80 border-b border-border shadow-sm' : '',
       ]"
     >
-      <!-- Прогресс-бар чтения -->
+      <!-- progress bar -->
       <div class="h-0.5 w-full bg-border/40">
         <div
           class="h-full bg-primary transition-[width] duration-150"
@@ -227,18 +255,19 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <!-- Right: screenshot / illustration (original size + 3D tilt) -->
+          <!-- Right: screenshot / illustration (optimized 3D tilt) -->
           <div class="flex justify-end flex-1">
             <div
               ref="tiltWrapper"
               class="tilt-card mx-auto mt-16 sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 xl:ml-20"
-              :style="tiltStyle"
               @mousemove="onMouseMove"
               @mouseleave="resetTilt"
             >
               <img
                 src="/assets/example.png"
                 alt="Aperçu de l’outil de signature"
+                decoding="async"
+                fetchpriority="high"
                 class="tilt-card-inner rounded-xl bg-background/5 shadow-2xl ring-1 ring-foreground/10 max-w-full"
               >
             </div>
@@ -252,6 +281,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .tilt-card {
   transform-style: preserve-3d;
+  transform: perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
   transition:
     transform 160ms ease-out,
     box-shadow 160ms ease-out;
@@ -262,5 +292,6 @@ onBeforeUnmount(() => {
   display: block;
   transform: translateZ(40px);
   will-change: transform;
+  backface-visibility: hidden;
 }
 </style>

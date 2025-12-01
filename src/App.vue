@@ -36,8 +36,20 @@ function handleOpenGuestGate() {
 }
 
 // Final visibility flag
-const gateVisible = computed(() => showGate.value || forceGate.value)
-
+const gateVisible = computed(() => {
+  // there is no gate on /CGU,
+  if (route.path === '/cgu') return false
+  return showGate.value || forceGate.value
+})
+// just in case
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/cgu') {
+      forceGate.value = false
+    }
+  },
+)
 /* ---------- theme: follow system preference ---------- */
 const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 

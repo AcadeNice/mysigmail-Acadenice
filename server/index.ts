@@ -113,6 +113,21 @@ app.get('/api/auth/status', (req, res) => {
     return res.json({ role: 'guest' })
   }
 })
+app.post('/api/disconnect-all', async (req, res) => {
+  try {
+    // 1) logout
+    res.clearCookie('access_token')
+
+    // 2) Google disconnect logic
+    // using /api/gmail/disconnect
+
+    // 3) just in case:
+    return res.json({ ok: true })
+  } catch (e: any) {
+    console.error('disconnect-all error:', e)
+    return res.status(500).json({ error: e?.message || 'Internal error' })
+  }
+})
 
 function requireUser(req: any, res: any, next: any) {
   try {
