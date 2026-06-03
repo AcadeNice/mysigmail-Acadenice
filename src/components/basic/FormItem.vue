@@ -30,8 +30,8 @@ const defaultLabels: Record<string, string> = {
   'website-link': 'Site web',
   'email-address': 'Email',
   'appointment-link': 'Prendre rendez-vous',
-  'phone-mobile': 'Portable',
-  'phone-standard': 'Standard',
+  'phone-mobile': 'Standard',
+  'phone-standard': 'Poste',
 }
 
 const fallbackLabel = computed(() => {
@@ -60,8 +60,8 @@ const valuePlaceholder = computed(() => {
     'website-link': 'https://exemple.com',
     'email-address': 'prenom.nom@exemple.fr',
     'appointment-link': 'https://cal.acadenice.com/prénom/rdv',
-    'phone-mobile': '06 00 00 00 00',
-    'phone-standard': '04 00 00 00 00',
+    'phone-mobile': '04 23 50 02 70',
+    'phone-standard': '10X',
   }
 
   if (placeholders[localValue.value.id ?? '']) return placeholders[localValue.value.id ?? '']
@@ -213,7 +213,6 @@ watch(localValue, (v) => update(v), { deep: true })
                       Ajouter un champ sur la même ligne
                     </UiButton>
                     <UiButton
-                      v-if="!localValue.main"
                       variant="destructive"
                       size="sm"
                       class="w-full"

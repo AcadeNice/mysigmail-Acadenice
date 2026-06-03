@@ -58,8 +58,14 @@ export function useTemplateData() {
         main: true,
         value: 'https://cal.acadenice.com/prénom/rdv',
       },
-      { id: 'phone-mobile', label: 'Portable', type: 'phone', main: true, value: '' },
-      { id: 'phone-standard', label: 'Standard', type: 'phone', main: true, value: '' },
+      {
+        id: 'phone-mobile',
+        label: 'Standard',
+        type: 'phone',
+        main: true,
+        value: '04 23 50 02 70',
+      },
+      { id: 'phone-standard', label: 'Poste', type: 'text', main: true, value: '10X' },
     ] as BasicTool[],
 
     options: {

@@ -128,17 +128,17 @@ function ensureContactFields(signature: Signature) {
   })
   const mobile = ensureField(signature, {
     id: 'phone-mobile',
-    label: 'Portable',
-    main: true,
-    type: 'phone',
-    value: '',
-  })
-  const standard = ensureField(signature, {
-    id: 'phone-standard',
     label: 'Standard',
     main: true,
     type: 'phone',
-    value: '',
+    value: '04 23 50 02 70',
+  })
+  const standard = ensureField(signature, {
+    id: 'phone-standard',
+    label: 'Poste',
+    main: true,
+    type: 'text',
+    value: '10X',
   })
 
   if (!appointment.label || sameLabel(appointment, 'Prendre RDV')) {
@@ -147,6 +147,22 @@ function ensureContactFields(signature: Signature) {
 
   if (!appointment.value) {
     appointment.value = 'https://cal.acadenice.com/prénom/rdv'
+  }
+
+  if (!mobile.label || sameLabel(mobile, 'Portable')) {
+    mobile.label = 'Standard'
+  }
+
+  if (!mobile.value) {
+    mobile.value = '04 23 50 02 70'
+  }
+
+  if (!standard.label || sameLabel(standard, 'Standard')) {
+    standard.label = 'Poste'
+  }
+
+  if (!standard.value) {
+    standard.value = '10X'
   }
 
   moveAfter(basic, appointment, email)
