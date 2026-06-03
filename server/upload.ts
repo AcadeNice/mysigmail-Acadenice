@@ -108,7 +108,7 @@ export function makeProtectedUploadRoutes(requireUser: any) {
   })
 
   router.get('/api/banner-info', (_req, res) => {
-    const p = path.join(publicAssetsDir, 'acadenice-banner.png')
+    const p = path.join(publicAssetsDir, 'acadenice-banniere.png')
     try {
       if (!fs.existsSync(p)) {
         return res.json({ exists: false })
@@ -117,7 +117,7 @@ export function makeProtectedUploadRoutes(requireUser: any) {
       const stat = fs.statSync(p)
       return res.json({
         exists: true,
-        path: '/assets/acadenice-banner.png',
+        path: '/assets/acadenice-banniere.png',
         mtime: stat.mtimeMs,
       })
     } catch {
@@ -135,14 +135,14 @@ export function makeProtectedUploadRoutes(requireUser: any) {
           return res.status(400).json({ error: 'No file or unsupported type (PNG only)' })
         }
 
-        const target = path.join(publicAssetsDir, 'acadenice-banner.png')
+        const target = path.join(publicAssetsDir, 'acadenice-banniere.png')
         // rewriting file
         fs.writeFileSync(target, req.file.buffer)
         const stat = fs.statSync(target)
 
         return res.json({
           ok: true,
-          path: '/assets/acadenice-banner.png',
+          path: '/assets/acadenice-banniere.png',
           mtime: stat.mtimeMs,
         })
       } catch (e: any) {

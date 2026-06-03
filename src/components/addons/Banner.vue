@@ -20,19 +20,6 @@ const link = computed<string>({
   get: () => getBannerEffective().link,
   set: (v) => patchBannerEffective('link', (v ?? '').trim()),
 })
-
-const widthPct = computed<number>({
-  get: () => getBannerEffective().width ?? 35,
-  set: (val) => {
-    const v = Math.max(10, Math.min(100, Math.round(val ?? 35)))
-    patchBannerEffective('width', v)
-  },
-})
-
-const widthArr = computed<number[]>({
-  get: () => [widthPct.value],
-  set: (arr) => (widthPct.value = Array.isArray(arr) ? arr[0] : 100),
-})
 </script>
 
 <template>
@@ -43,7 +30,7 @@ const widthArr = computed<number[]>({
     >
       <UiInput
         v-model="image"
-        placeholder="https://example.com/banner.png"
+        placeholder="https://sign.acadenice.com/assets/acadenice-banniere.png"
         spellcheck="false"
         autocapitalize="off"
         autocomplete="off"
@@ -60,19 +47,6 @@ const widthArr = computed<number[]>({
         v-model="link"
         placeholder="https://acadenice.fr"
       />
-    </UiFieldFormItem>
-
-    <UiFieldFormItem
-      label="Width"
-      :description="`Largeur en pourcentage. Actuelle : ${widthPct}%`"
-    >
-      <div class="flex items-center h-5">
-        <UiSlider
-          v-model="widthArr"
-          :min="10"
-          :max="100"
-        />
-      </div>
     </UiFieldFormItem>
   </UiFieldForm>
 </template>

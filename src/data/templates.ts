@@ -87,7 +87,7 @@ export function useTemplateData() {
         type: 'banner',
         isNew: false,
         value: {
-          image: `${publicBase}/assets/acadenice-banner.png`,
+          image: `${publicBase}/assets/acadenice-banniere.png`,
           link: 'https://acadenice.fr',
         },
       },

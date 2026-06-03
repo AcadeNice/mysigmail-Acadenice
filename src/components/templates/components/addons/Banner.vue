@@ -15,7 +15,8 @@ interface Props {
 }
 defineProps<Props>()
 
-const DEFAULT_BANNER_IMAGE = ''
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+const DEFAULT_BANNER_IMAGE = `${publicBase}/assets/acadenice-banniere.png`
 const { getBannerEffective } = useSignatures()
 
 const banner = computed<AddonBanner>(() => getBannerEffective())
@@ -23,13 +24,11 @@ const bannerSrc = computed(() =>
   banner.value.image?.trim() ? banner.value.image.trim() : DEFAULT_BANNER_IMAGE,
 )
 
-// ключ для форс-перерисовки при смене URL/ширины
-const imgKey = computed(() => `${bannerSrc.value}|${banner.value.width ?? 100}`)
+const imgKey = computed(() => bannerSrc.value)
 </script>
 
 <template>
-  <!-- Табличная обёртка под e-mail, базовая ширина 600 -->
-  <Base.Table width="600">
+  <Base.Table width="auto">
     <tr>
       <td
         valign="top"
@@ -41,29 +40,19 @@ const imgKey = computed(() => `${bannerSrc.value}|${banner.value.width ?? 100}`)
           target="_blank"
           style="text-decoration: none"
         >
-          <!--  Width -->
-          <div
-            :style="{
-              maxWidth: '600px',
-              width: `${banner.width ?? 35}%`,
-            }"
+          <img
+            :key="imgKey"
+            :src="bannerSrc"
+            alt="banner"
+            style="
+              display: block;
+              height: auto;
+              max-width: 100%;
+              border: 0;
+              outline: none;
+              text-decoration: none;
+            "
           >
-            <img
-              :key="imgKey"
-              :src="bannerSrc"
-              alt="banner"
-              width="600"
-              style="
-                display: block;
-                width: 100%;
-                height: auto;
-                max-height: 150px;
-                border: 0;
-                outline: none;
-                text-decoration: none;
-              "
-            >
-          </div>
         </a>
       </td>
     </tr>

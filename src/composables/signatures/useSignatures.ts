@@ -63,6 +63,10 @@ const DEFAULT_LOGO = {
   image: `${window.location.origin}/assets/logo-acadenice.png`,
   link: 'https://acadenice.fr',
 }
+const DEFAULT_BANNER = {
+  image: `${window.location.origin}/assets/acadenice-banniere.png`,
+  link: 'https://acadenice.fr',
+}
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -312,6 +316,18 @@ function ensureDefaultVideoConference(signature: Signature) {
   }
 }
 
+function ensureDefaultBanner(signature: Signature) {
+  const banner = signature.tools.addons.find((addon) => addon.type === 'banner')
+  if (!banner || typeof banner.value !== 'object' || banner.value === null || Array.isArray(banner.value)) return
+
+  const value = banner.value as AddonBanner
+  if (!value.image || value.image.endsWith('/assets/acadenice-banner.png')) {
+    value.image = DEFAULT_BANNER.image
+  }
+  if (!value.link) value.link = DEFAULT_BANNER.link
+  delete (value as Partial<AddonBanner>).width
+}
+
 function ensureDefaultLogo(signature: Signature) {
   const logo = signature.tools.addons.find((addon) => addon.type === 'logo')
   if (!logo || typeof logo.value !== 'object' || logo.value === null || Array.isArray(logo.value)) return
@@ -329,6 +345,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureDefaultDisclaimer(signature)
   ensureDefaultCta(signature)
   ensureDefaultVideoConference(signature)
+  ensureDefaultBanner(signature)
   ensureDefaultLogo(signature)
 }
 
