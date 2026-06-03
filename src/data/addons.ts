@@ -51,13 +51,13 @@ export const addons: AddonTool[] = [
     },
   },
   {
-    label: 'CTA',
+    label: 'Appel à l\'Action',
     type: 'cta',
     isNew: false,
     value: {
-      text: 'Get your coupon for a 20% discount',
-      link: 'https://example.com',
-      colorBg: '#ffa500',
+      text: '🎓 AcadéNice forme les futurs talents',
+      link: 'https://acadenice.fr',
+      colorBg: '#FDA100',
       colorText: '#fff',
       image: '',
       width: 50,

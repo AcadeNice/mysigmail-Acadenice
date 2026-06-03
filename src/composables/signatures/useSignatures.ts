@@ -15,6 +15,7 @@ import { clone } from '@/utils'
 import type {
   Addon,
   AddonBanner,
+  AddonCTA,
   AddonTrackingPixel,
   AddonValue,
   BasicTool,
@@ -33,6 +34,17 @@ const selectedIdStore = useStorage('selected-signature-id', '')
 const unsavedSignatureStore = useStorage('unsaved-signature', '')
 
 const OLD_DEFAULT_DISCLAIMER = 'The contents of this email and any attachments are confidential. It is strictly forbidden to share any part of this message with any third party, without a written consent of the sender. If you received this message by mistake, please reply to this message and follow with its deletion, so that we can ensure such a mistake does not occur in the future.'
+const OLD_DEFAULT_CTA = {
+  text: 'Get your coupon for a 20% discount',
+  link: 'https://example.com',
+  colorBg: '#ffa500',
+}
+const NEXT_DEFAULT_CTA = {
+  label: 'Appel à l\'Action',
+  text: '🎓 AcadéNice forme les futurs talents',
+  link: 'https://acadenice.fr',
+  colorBg: '#FDA100',
+}
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -219,12 +231,27 @@ function ensureDefaultDisclaimer(signature: Signature) {
   }
 }
 
+function ensureDefaultCta(signature: Signature) {
+  const cta = signature.tools.addons.find((addon) => addon.type === 'cta')
+  if (!cta || typeof cta.value !== 'object' || cta.value === null || Array.isArray(cta.value)) return
+
+  cta.label = NEXT_DEFAULT_CTA.label
+
+  const value = cta.value as AddonCTA
+  if (value.text === OLD_DEFAULT_CTA.text) value.text = NEXT_DEFAULT_CTA.text
+  if (value.link === OLD_DEFAULT_CTA.link) value.link = NEXT_DEFAULT_CTA.link
+  if (normalizeColor(value.colorBg) === normalizeColor(OLD_DEFAULT_CTA.colorBg)) {
+    value.colorBg = NEXT_DEFAULT_CTA.colorBg
+  }
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
   ensureDefaultOptionColors(signature)
   ensureDefaultSocials(signature)
   ensureDefaultDisclaimer(signature)
+  ensureDefaultCta(signature)
 }
 
 const nameField = computed(() => {
