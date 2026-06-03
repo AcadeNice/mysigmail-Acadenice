@@ -8,6 +8,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useAccess } from '@/composables/useAccess'
 import { useSonner } from '@/composables/useSonner'
+import { disclaimerPresets } from '@/data/disclaimer-pressets'
 import { useTemplateData } from '@/data/templates'
 import { clone } from '@/utils'
 
@@ -30,6 +31,8 @@ const isInit = ref(false)
 
 const selectedIdStore = useStorage('selected-signature-id', '')
 const unsavedSignatureStore = useStorage('unsaved-signature', '')
+
+const OLD_DEFAULT_DISCLAIMER = 'The contents of this email and any attachments are confidential. It is strictly forbidden to share any part of this message with any third party, without a written consent of the sender. If you received this message by mistake, please reply to this message and follow with its deletion, so that we can ensure such a mistake does not occur in the future.'
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -207,11 +210,21 @@ function ensureDefaultSocials(signature: Signature) {
   })
 }
 
+function ensureDefaultDisclaimer(signature: Signature) {
+  const disclaimer = signature.tools.addons.find((addon) => addon.type === 'disclaimer')
+  if (!disclaimer || typeof disclaimer.value !== 'string') return
+
+  if (disclaimer.value.trim() === OLD_DEFAULT_DISCLAIMER) {
+    disclaimer.value = disclaimerPresets[0].value
+  }
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
   ensureDefaultOptionColors(signature)
   ensureDefaultSocials(signature)
+  ensureDefaultDisclaimer(signature)
 }
 
 const nameField = computed(() => {

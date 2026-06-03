@@ -12,6 +12,7 @@ defineProps<Props>()
 const { getAddonValue, options } = useSignatures()
 
 const disclaimer = computed(() => getAddonValue<string>('disclaimer'))
+const disclaimerLines = computed(() => disclaimer.value.split(/\r?\n/))
 
 const computedStyle = computed(() => {
   const style: HTMLAttributes['style'] = {
@@ -33,7 +34,13 @@ const computedStyle = computed(() => {
     <tr>
       <td :style="tdStyle">
         <p :style="computedStyle">
-          {{ disclaimer }}
+          <template
+            v-for="(line, index) in disclaimerLines"
+            :key="`${index}-${line}`"
+          >
+            <br v-if="index > 0">
+            {{ line }}
+          </template>
         </p>
       </td>
     </tr>

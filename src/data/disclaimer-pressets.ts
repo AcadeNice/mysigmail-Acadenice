@@ -1,8 +1,8 @@
 export const disclaimerPresets = [
   {
-    label: 'Confidentiality',
+    label: 'Confidentialité',
     value:
-      'The contents of this email and any attachments are confidential. It is strictly forbidden to share any part of this message with any third party, without a written consent of the sender. If you received this message by mistake, please reply to this message and follow with its deletion, so that we can ensure such a mistake does not occur in the future.',
+      'Ce message et ses éventuelles pièces jointes peuvent contenir des informations confidentielles destinées uniquement à leur destinataire.\nSi vous avez reçu cet email par erreur, merci de nous en informer par retour de message, puis de le supprimer ainsi que ses éventuelles pièces jointes.\nPensez à l’environnement : n’imprimez cet email que si nécessaire.',
   },
   {
     label: 'Data protection',
