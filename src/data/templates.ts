@@ -13,6 +13,9 @@ import type {
 
 import { useAccess } from '@/composables/useAccess'
 
+// Absolute URL so the banner resolves in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+
 export interface Template extends Signature {
   preview?: string
   isNew?: boolean
@@ -50,6 +53,9 @@ export function useTemplateData() {
         main: true,
         value: 'prenom.nom@acadenice.fr',
       },
+      { id: 'appointment-link', label: 'Prendre RDV', type: 'link', main: true, value: '' },
+      { id: 'phone-mobile', label: 'Portable', type: 'phone', main: true, value: '' },
+      { id: 'phone-standard', label: 'Standard', type: 'phone', main: true, value: '' },
     ] as BasicTool[],
 
     options: {
@@ -71,7 +77,7 @@ export function useTemplateData() {
         type: 'banner',
         isNew: false,
         value: {
-          image: '/assets/acadenice-banner.png',
+          image: `${publicBase}/assets/acadenice-banner.png`,
           link: 'https://acadenice.fr',
         },
       },

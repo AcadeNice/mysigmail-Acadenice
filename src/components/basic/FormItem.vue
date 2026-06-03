@@ -12,6 +12,19 @@ const props = defineProps<Props>()
 const { installed } = useSignatures()
 
 const localValue = ref(clone<BasicTool>(props.value))
+const contentLabel = computed(() => {
+  if (localValue.value.type === 'link') return 'Lien'
+  if (localValue.value.type === 'email') return 'Adresse e-mail'
+  if (localValue.value.type === 'phone') return 'Téléphone'
+  return 'Contenu'
+})
+
+const contentPlaceholder = computed(() => {
+  if (localValue.value.type === 'link') return 'https://exemple.com'
+  if (localValue.value.type === 'email') return 'prenom.nom@exemple.fr'
+  if (localValue.value.type === 'phone') return '04 00 00 00 00'
+  return ''
+})
 
 // +1 потому что первый элемент это изображение
 const index = props.index + 1
@@ -35,13 +48,16 @@ watch(localValue, (v) => update(v), { deep: true })
 </script>
 
 <template>
-  <UiFieldForm label-position="top">
+  <UiFieldForm
+    label-position="top"
+    class="space-y-2"
+  >
     <UiFieldFormItem>
       <template #label>
         <UiFieldFormLabel>
           <div class="flex items-center justify-between w-full">
             <div class="grow">
-              {{ localValue.label }}
+              Libellé
             </div>
             <div class="flex items-center">
               <UiPopover>
@@ -59,15 +75,12 @@ watch(localValue, (v) => update(v), { deep: true })
                 <UiPopoverContent>
                   <UiFieldForm
                     label-position="top"
-                    class="grid grid-cols-2 gap-4 space-y-0"
+                    class="space-y-0"
                   >
-                    <UiFieldFormItem label="Label">
-                      <UiInput v-model="localValue.label" />
-                    </UiFieldFormItem>
                     <UiFieldFormItem label="Type">
                       <UiSelect v-model="localValue.type">
                         <UiSelectTrigger class="w-full">
-                          <UiSelectValue placeholder="Select a timezone" />
+                          <UiSelectValue placeholder="Sélectionner un type" />
                         </UiSelectTrigger>
                         <UiSelectContent>
                           <UiSelectGroup>
@@ -97,7 +110,13 @@ watch(localValue, (v) => update(v), { deep: true })
           </div>
         </UiFieldFormLabel>
       </template>
-      <UiInput v-model="localValue.value" />
+      <UiInput v-model="localValue.label" />
+    </UiFieldFormItem>
+    <UiFieldFormItem :label="contentLabel">
+      <UiInput
+        v-model="localValue.value"
+        :placeholder="contentPlaceholder"
+      />
     </UiFieldFormItem>
   </UiFieldForm>
 </template>

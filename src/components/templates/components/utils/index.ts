@@ -35,3 +35,15 @@ export function getAnchorAttrs(
     }
   }
 }
+
+export function usesLabelAsLinkText(tool: BasicTool) {
+  return tool.type === 'link'
+}
+
+export function getFieldDisplayValue(tool: BasicTool) {
+  if (usesLabelAsLinkText(tool)) {
+    return tool.label
+  }
+
+  return tool.value
+}

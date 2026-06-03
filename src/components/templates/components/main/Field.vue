@@ -7,7 +7,7 @@ import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, usesLabelAsLinkText } from '../utils'
 
 interface Props {
   model: BasicTool
@@ -41,6 +41,11 @@ const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
     ...(props.enableAnalytics && props.analyticTag ? { 'data-analytic': props.analyticTag } : {}),
   }
 })
+
+const displayValue = computed(() => getFieldDisplayValue(props.model))
+const showFieldLabel = computed(
+  () => props.showLabel && props.model.label && !usesLabelAsLinkText(props.model),
+)
 </script>
 
 <template>
@@ -55,7 +60,7 @@ const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
         :style="{ ...font, display }"
       >
         <span
-          v-if="showLabel && model.label"
+          v-if="showFieldLabel"
           style="padding-right: 0px; font-weight: 600"
           v-bind="$attrs"
           :style="{ color: labelColor }"
@@ -65,7 +70,7 @@ const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
           v-if="model.type !== 'text'"
           v-bind="anchorAttrs"
         >
-          {{ model.value }}
+          {{ displayValue }}
         </Base.Link>
 
         <span

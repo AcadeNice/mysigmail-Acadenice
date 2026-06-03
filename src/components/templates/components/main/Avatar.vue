@@ -38,10 +38,11 @@ const roundness = computed(() => {
   return 0
 })
 
-const placeholder = computed(() => '/assets/avatar.png')
-
 const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
 const isHttp = (s: string) => /^https?:\/\//i.test(s)
+
+// Absolute URL so the placeholder resolves in mail clients (relative paths break in Gmail/Outlook)
+const placeholder = computed(() => `${publicBase}/assets/avatar.png`)
 
 const resolvedSrc = computed(() => {
   const s = (props.src ?? '').trim()

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 
-import type { BasicTool } from '~/composables/signatures/types'
+import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, usesLabelAsLinkText } from '../utils'
 
 interface Props {
   model: BasicTool[]
@@ -48,7 +48,7 @@ withDefaults(defineProps<Props>(), {
               :style="separatorStyle"
             >&nbsp;&nbsp;{{ separator }}&nbsp;&nbsp;</span>
             <span
-              v-if="showLabel && i.label"
+              v-if="showLabel && i.label && !usesLabelAsLinkText(i)"
               style="padding-right: 0px; font-weight: 600"
               v-bind="$attrs"
               :style="{ color: labelColor }"
@@ -57,7 +57,7 @@ withDefaults(defineProps<Props>(), {
               v-if="i.type !== 'text'"
               v-bind="getAnchorAttrs(i, textColor)"
             >
-              {{ i.value }}
+              {{ getFieldDisplayValue(i) }}
             </Base.Link>
             <span
               v-if="i.type === 'text'"
@@ -76,7 +76,7 @@ withDefaults(defineProps<Props>(), {
           :style="{ ...font }"
         >
           <span
-            v-if="showLabel && i.label"
+            v-if="showLabel && i.label && !usesLabelAsLinkText(i)"
             style="padding-right: 0px; font-weight: 600"
             v-bind="$attrs"
             :style="{ color: labelColor }"
@@ -85,7 +85,7 @@ withDefaults(defineProps<Props>(), {
             v-if="i.type !== 'text'"
             v-bind="getAnchorAttrs(i, textColor)"
           >
-            {{ i.value }}
+            {{ getFieldDisplayValue(i) }}
           </Base.Link>
           <span
             v-if="i.type === 'text'"

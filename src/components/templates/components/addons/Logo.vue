@@ -17,7 +17,9 @@ const { getAddonValue, options } = useSignatures()
 
 const logo = computed(() => getAddonValue<AddonLogo>('logo'))
 
-const DEFAULT_LOGO_IMAGE = `/assets/presets/logo-5-1.png`
+// Absolute URL so the image resolves in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+const DEFAULT_LOGO_IMAGE = `${publicBase}/assets/presets/logo-5-1.png`
 
 const avatarSize = computed(() => {
   return options.value?.avatarSize

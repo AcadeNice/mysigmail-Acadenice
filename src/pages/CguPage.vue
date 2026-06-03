@@ -1,73 +1,66 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 defineOptions({ name: 'CguPage' })
 
 const router = useRouter()
-
 const lang = ref<'fr' | 'en'>('fr')
-const isDark = ref<boolean>(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 
 function toggleLang() {
   lang.value = lang.value === 'fr' ? 'en' : 'fr'
 }
 
 function goBack() {
-  // can be router.back(), but push('/') is easier to manage
   router.push('/')
 }
-
-function handleTheme(e: MediaQueryListEvent) {
-  isDark.value = e.matches
-}
-
-onMounted(() => {
-  const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
-  mq?.addEventListener?.('change', handleTheme)
-})
-
-onBeforeUnmount(() => {
-  const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
-  mq?.removeEventListener?.('change', handleTheme)
-})
 </script>
 
 <template>
-  <div
-    class="min-h-screen"
-    :class="isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'"
-  >
-    <div class="fixed left-2 top-4 flex gap-2 z-50">
-      <!-- back -->
-      <button
-        type="button"
-        class="h-9 px-3 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition border cursor-pointer"
-        :class="
-          isDark
-            ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
-            : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
-        "
-        @click="goBack"
-      >
-        ← Retour
-      </button>
+  <div class="relative overflow-hidden min-h-screen bg-background text-foreground">
+    <!-- Header -->
+    <header class="sticky top-0 z-20 backdrop-blur-lg bg-background/80 border-b border-border shadow-sm">
+      <div class="container flex max-w-screen-2xl items-center justify-between px-4 lg:px-6 py-3">
+        <!-- Logo -->
+        <RouterLink
+          to="/"
+          class="flex items-center gap-2"
+        >
+          <img
+            src="/logo_rounded.webp"
+            alt="AcadéNice"
+            width="48"
+            height="48"
+            class="rounded-sm"
+          >
+        </RouterLink>
 
-      <!-- lang -->
-      <button
-        type="button"
-        class="h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition border cursor-pointer"
-        :class="
-          isDark
-            ? 'border-gray-600 bg-slate-900 text-slate-100 hover:bg-slate-800'
-            : 'border-gray-300 bg-white text-slate-900 hover:bg-gray-50'
-        "
-        @click="toggleLang"
-      >
-        {{ lang === 'fr' ? 'FR' : 'EN' }}
-      </button>
-    </div>
-    <div class="max-w-4xl mx-auto px-4 py-8 relative">
+        <!-- Actions -->
+        <div class="flex items-center gap-3">
+          <!-- Lang toggle -->
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-sm text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4"
+            @click="toggleLang"
+          >
+            {{ lang === 'fr' ? 'FR' : 'EN' }}
+          </button>
+
+          <!-- Back button -->
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-sm text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/80 h-9 px-4"
+            @click="goBack"
+          >
+            ← Retour
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="relative isolate bg-background">
+      <div class="container mx-auto max-w-4xl px-4 py-8 lg:px-6 lg:py-12">
       <!-- ---------- VERSION FRANÇAISE ---------- -->
       <div v-if="lang === 'fr'">
         <h1 class="text-3xl font-semibold mb-6">
@@ -80,28 +73,28 @@ onBeforeUnmount(() => {
           du service implique l’acceptation des présentes conditions.
         </p>
 
-        <!-- 1. Présentation du Service -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            1. Présentation du Service
-          </h2>
-          <p class="mb-2">
+          <!-- 1. Présentation du Service -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              1. Présentation du Service
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
             Le service (ci-après le « Service ») permet aux utilisateurs de créer et de
             personnaliser une signature d’e-mail professionnelle, puis de la copier ou de l’intégrer
             dans certains clients de messagerie, notamment Gmail.
           </p>
           <p>
-            Le Service est mis à disposition gratuitement par AcadéNice et est principalement
-            destiné à un usage dans le cadre académique et professionnel des utilisateurs concernés.
-          </p>
-        </section>
+              Le Service est mis à disposition gratuitement par AcadéNice et est principalement
+              destiné à un usage dans le cadre académique et professionnel des utilisateurs concernés.
+            </p>
+          </section>
 
-        <!-- 2. Accès et utilisation du Service -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            2. Accès et utilisation du Service
-          </h2>
-          <ul class="list-disc pl-5 space-y-1 mb-2">
+          <!-- 2. Accès et utilisation du Service -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              2. Accès et utilisation du Service
+            </h2>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 mb-3 dark:prose-invert">
             <li>L’utilisation du Service est <strong>gratuite</strong>.</li>
             <li>Le Service est accessible via un navigateur web compatible.</li>
             <li>
@@ -122,10 +115,10 @@ onBeforeUnmount(() => {
             3. Données saisies dans la signature
           </h2>
           <p class="mb-2">
-            Les informations que vous saisissez dans les champs de la signature (nom, fonction,
-            établissement, coordonnées, liens, bannière, réseaux sociaux, etc.) :
-          </p>
-          <ul class="list-disc pl-5 space-y-1 mb-2">
+              Les informations que vous saisissez dans les champs de la signature (nom, fonction,
+              établissement, coordonnées, liens, bannière, réseaux sociaux, etc.) :
+            </p>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 mb-3 dark:prose-invert">
             <li><strong>ne sont pas enregistrées sur nos serveurs</strong>&nbsp;;</li>
             <li>
               sont stockées uniquement <strong>en local dans votre navigateur</strong> (par exemple
@@ -136,18 +129,18 @@ onBeforeUnmount(() => {
               sauf si vous les copiez ou exportez manuellement.
             </li>
           </ul>
-          <p>
-            Vous êtes seul responsable du contenu de votre signature (mentions obligatoires,
-            exactitude des informations, absence de données sensibles, etc.).
-          </p>
-        </section>
+            <p class="prose prose-sm prose-zinc dark:prose-invert">
+              Vous êtes seul responsable du contenu de votre signature (mentions obligatoires,
+              exactitude des informations, absence de données sensibles, etc.).
+            </p>
+          </section>
 
-        <!-- 4. Questionnaire initial et données côté serveur -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            4. Questionnaire initial et données stockées côté serveur
-          </h2>
-          <p class="mb-2">
+          <!-- 4. Questionnaire initial et données côté serveur -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              4. Questionnaire initial et données stockées côté serveur
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
             Avant la connexion et/ou l’accès complet au Service, un formulaire (questionnaire) peut
             vous être présenté. Les données saisies dans ce questionnaire :
           </p>
@@ -163,8 +156,8 @@ onBeforeUnmount(() => {
               prospection&nbsp;;
             </li>
             <li>
-              peuvent être communiquées uniquement :
-              <ul class="list-disc pl-5 mt-1 space-y-1">
+                peuvent être communiquées uniquement :
+                <ul class="list-disc pl-5 mt-2 space-y-2">
                 <li>
                   aux services ou prestataires techniques agissant pour notre compte (hébergement,
                   maintenance, etc.), dans le cadre de contrats de sous-traitance encadrés&nbsp;;
@@ -175,22 +168,22 @@ onBeforeUnmount(() => {
               </ul>
             </li>
           </ul>
-          <p>
-            La durée de conservation de ces données est limitée au temps nécessaire aux finalités
-            ci-dessus, puis les données sont supprimées ou anonymisées.
-          </p>
-        </section>
+            <p class="prose prose-sm prose-zinc dark:prose-invert">
+              La durée de conservation de ces données est limitée au temps nécessaire aux finalités
+              ci-dessus, puis les données sont supprimées ou anonymisées.
+            </p>
+          </section>
 
-        <!-- 5. Authentification et compte utilisateur -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            5. Authentification et compte utilisateur
-          </h2>
-          <p class="mb-2">
-            Pour certaines fonctionnalités (par exemple, accès réservé au personnel ou configuration
-            avancée), une authentification peut être requise.
-          </p>
-          <ul class="list-disc pl-5 space-y-1">
+          <!-- 5. Authentification et compte utilisateur -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              5. Authentification et compte utilisateur
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
+              Pour certaines fonctionnalités (par exemple, accès réservé au personnel ou configuration
+              avancée), une authentification peut être requise.
+            </p>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 dark:prose-invert">
             <li>
               Vos identifiants (mot de passe, codes d’accès) sont personnels et ne doivent pas être
               partagés.
@@ -203,15 +196,15 @@ onBeforeUnmount(() => {
               En cas de suspicion d’usage frauduleux, vous devez en informer AcadéNice dans les
               meilleurs délais, selon les procédures internes.
             </li>
-          </ul>
-        </section>
+            </ul>
+          </section>
 
-        <!-- 6. Intégration avec Gmail et services Google -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            6. Intégration avec Gmail et services Google
-          </h2>
-          <p class="mb-2">
+          <!-- 6. Intégration avec Gmail et services Google -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              6. Intégration avec Gmail et services Google
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
             Le Service peut proposer une intégration avec Gmail afin de synchroniser la signature
             créée avec votre compte Gmail et de la mettre à jour via l’API Gmail.
           </p>
@@ -235,18 +228,18 @@ onBeforeUnmount(() => {
               compte Google et, le cas échéant, via les options de déconnexion proposées dans le
               Service.
             </li>
-          </ul>
-        </section>
+            </ul>
+          </section>
 
-        <!-- 7. Cookies et stockage local -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            7. Cookies et stockage local
-          </h2>
-          <p class="mb-2">
-            Le Service peut utiliser des cookies techniques ou des mécanismes équivalents pour :
-          </p>
-          <ul class="list-disc pl-5 space-y-1 mb-2">
+          <!-- 7. Cookies et stockage local -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              7. Cookies et stockage local
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
+              Le Service peut utiliser des cookies techniques ou des mécanismes équivalents pour :
+            </p>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 mb-3 dark:prose-invert">
             <li>gérer les sessions d’authentification ;</li>
             <li>mémoriser certaines préférences (par exemple la langue) ;</li>
             <li>conserver localement la configuration de votre signature dans votre navigateur.</li>
@@ -263,10 +256,10 @@ onBeforeUnmount(() => {
             8. Bases juridiques du traitement
           </h2>
           <p class="mb-2">
-            Les traitements de données personnelles mis en œuvre via le Service peuvent reposer
-            notamment sur&nbsp;:
-          </p>
-          <ul class="list-disc pl-5 space-y-1">
+              Les traitements de données personnelles mis en œuvre via le Service peuvent reposer
+              notamment sur&nbsp;:
+            </p>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 dark:prose-invert">
             <li>
               l’exécution d’une mission d’intérêt public ou relevant de l’autorité publique confiée
               à AcadéNice&nbsp;;
@@ -279,19 +272,19 @@ onBeforeUnmount(() => {
               le consentement de l’utilisateur, lorsque celui-ci est requis par la réglementation
               applicable.
             </li>
-          </ul>
-        </section>
+            </ul>
+          </section>
 
-        <!-- 9. Droits des personnes -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            9. Droits des personnes concernées
-          </h2>
-          <p class="mb-2">
-            Conformément à la réglementation applicable en matière de protection des données, vous
-            disposez notamment des droits suivants concernant vos données personnelles :
-          </p>
-          <ul class="list-disc pl-5 space-y-1 mb-2">
+          <!-- 9. Droits des personnes -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              9. Droits des personnes concernées
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
+              Conformément à la réglementation applicable en matière de protection des données, vous
+              disposez notamment des droits suivants concernant vos données personnelles :
+            </p>
+            <ul class="prose prose-sm prose-zinc list-disc pl-5 space-y-2 mb-3 dark:prose-invert">
             <li>droit d’accès ;</li>
             <li>droit de rectification ;</li>
             <li>droit à l’effacement (dans les limites légales) ;</li>
@@ -371,44 +364,44 @@ onBeforeUnmount(() => {
               de la perte de données stockées localement dans le navigateur (effacement du cache,
               changement de poste, etc.).
             </li>
-          </ul>
-        </section>
+            </ul>
+          </section>
 
-        <!-- 13. Modifications -->
-        <section class="mb-8">
-          <h2 class="text-xl font-semibold mb-2">
-            13. Modifications des conditions et de la politique de confidentialité
-          </h2>
-          <p class="mb-2">
+          <!-- 13. Modifications -->
+          <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-3">
+              13. Modifications des conditions et de la politique de confidentialité
+            </h2>
+            <p class="prose prose-sm prose-zinc mb-3 dark:prose-invert">
             Les présentes conditions et la présente politique de confidentialité peuvent être mises
             à jour pour tenir compte de l’évolution du Service ou du cadre légal.
           </p>
           <p>
-            En cas de modification substantielle, une information pourra être affichée sur le
-            Service. La version applicable est celle en vigueur au moment de votre utilisation.
-          </p>
-        </section>
+              En cas de modification substantielle, une information pourra être affichée sur le
+              Service. La version applicable est celle en vigueur au moment de votre utilisation.
+            </p>
+          </section>
 
-        <!-- 14. Contact -->
-        <section class="mb-4">
-          <h2 class="text-xl font-semibold mb-2">
-            14. Contact
-          </h2>
-          <p>
-            Pour toute question relative aux présentes conditions ou à la protection des données
-            dans le cadre du Service, vous pouvez vous adresser à AcadéNice via les canaux de
-            contact officiels.
-          </p>
-        </section>
-      </div>
+          <!-- 14. Contact -->
+          <section class="mb-4">
+            <h2 class="text-2xl font-semibold mb-3">
+              14. Contact
+            </h2>
+            <p class="prose prose-sm prose-zinc dark:prose-invert">
+              Pour toute question relative aux présentes conditions ou à la protection des données
+              dans le cadre du Service, vous pouvez vous adresser à AcadéNice via les canaux de
+              contact officiels.
+            </p>
+          </section>
+        </div>
 
-      <!-- ---------- ENGLISH VERSION ---------- -->
-      <div v-else>
-        <h1 class="text-3xl font-semibold mb-6">
-          Terms of Use and Privacy Policy
-        </h1>
+        <!-- ---------- ENGLISH VERSION ---------- -->
+        <div v-else>
+          <h1 class="text-3xl font-bold tracking-tight mb-6">
+            Terms of Use and Privacy Policy
+          </h1>
 
-        <p class="text-sm text-muted-foreground mb-8">
+          <p class="prose prose-base prose-zinc mb-8 text-muted-foreground dark:prose-invert">
           This page describes the rules for using the e-mail signature generation service provided
           by AcadéNice, as well as how your data is processed. By using the service, you agree to
           these terms.
@@ -720,7 +713,15 @@ onBeforeUnmount(() => {
             the Service, you can contact AcadéNice via the academy’s official contact channels.
           </p>
         </section>
+        </div>
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto max-w-4xl px-4 py-8 lg:px-6">
+      <div class="flex justify-end">
+        <PreviewFooter />
+      </div>
+    </footer>
   </div>
 </template>

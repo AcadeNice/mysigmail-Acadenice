@@ -99,7 +99,7 @@ function deleteGmailTokens(email: string) {
 }
 
 /* ====================== helpers ====================== */
-const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || process.env.FRONT_ORIGIN || 'https://sign.a3n.fr' // fallback for prod
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || process.env.FRONT_ORIGIN || 'https://sign.acadenice.com' // fallback for prod
 
 function absolutifySignatureHtml(html: string): string {
   if (!PUBLIC_ORIGIN) return html

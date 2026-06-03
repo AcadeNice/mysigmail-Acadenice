@@ -5,7 +5,6 @@ import UilExclamationTriangle from '~icons/uil/exclamation-triangle'
 import UilGoogle from '~icons/uil/google'
 
 import { useSignatures } from '@/composables/signatures/useSignatures'
-import { useAccess } from '@/composables/useAccess'
 import { useCopySignature } from '@/composables/useCopySignature'
 import { useSonner } from '@/composables/useSonner'
 
@@ -15,9 +14,6 @@ const { isHtmlLarge, onCopyHTML, onCopySelect } = useCopySignature()
 const { downloadJSON, installed, uploadJSON } = useSignatures()
 // toasts
 const { sonner } = useSonner()
-// roles (guest / user)
-const { isUser } = useAccess()
-
 const disconnectingSite = ref(false)
 const inputRef = ref<HTMLInputElement>()
 const loadingGmail = ref(false)

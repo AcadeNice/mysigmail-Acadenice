@@ -21,10 +21,13 @@ const COLORS = {
   zoom: '#259DFF',
 }
 
+// Absolute URL so icons resolve in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+
 const LOGOS = {
-  hangouts: '/assets/icons/hangouts.png',
-  skype: '/assets/icons/skype.png',
-  zoom: '/assets/icons/zoom.png',
+  hangouts: `${publicBase}/assets/icons/hangouts.png`,
+  skype: `${publicBase}/assets/icons/skype.png`,
+  zoom: `${publicBase}/assets/icons/zoom.png`,
 }
 
 const videoConference = computed(() => getAddonValue<AddonVideoConference>('videoConference'))

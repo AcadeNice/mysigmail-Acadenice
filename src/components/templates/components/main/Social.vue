@@ -16,6 +16,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { options, socials } = useSignatures()
 
+// Absolute URL so icons resolve in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+
 const computedStyle = computed(() => {
   let style = {}
 
@@ -61,7 +64,7 @@ const computedStyle = computed(() => {
               <img
                 width="20"
                 height="20"
-                :src="`/assets/icons/${i.icon}.png`"
+                :src="`${publicBase}/assets/icons/${i.icon}.png`"
                 :alt="`social-icon-${i.icon}`"
                 style="display: table-cell; vertical-align: middle; border-radius: 3px"
                 :style="{ backgroundColor: options && options.mainColor }"

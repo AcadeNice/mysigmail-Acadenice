@@ -215,14 +215,25 @@ onBeforeUnmount(() => {
           />
         </div>
 
+        <div
+          class="app-brand-title"
+          style="position:absolute;left:50%;top:clamp(5.25rem,8vw,7.25rem);z-index:1;width:min(92vw,1500px);transform:translateX(-50%);color:#f6fff8;pointer-events:none;text-align:center;font-family:'Josefin Sans',ui-sans-serif,system-ui,sans-serif;"
+        >
+          <div style="display:inline-block;">
+            <div style="font-size:clamp(2rem,6.35vw,7.7rem);line-height:.92;letter-spacing:0;white-space:nowrap;text-shadow:0 18px 55px rgba(0,0,0,.42);font-weight:700;color:#4CCCB8;">
+              Signatures de Mail
+            </div>
+            <div style="margin-top:.35rem;text-align:right;color:#4cccb8;font-size:clamp(1.05rem,2.35vw,2.85rem);line-height:1;font-weight:400;letter-spacing:.02em;text-shadow:0 14px 38px rgba(0,0,0,.38);">
+              par AcadéNice
+            </div>
+          </div>
+        </div>
+
         <!-- Hero layout: text + illustration -->
         <div class="mx-auto max-w-7xl px-6 lg:flex lg:min-h-screen lg:items-center lg:px-12">
           <!-- Left: copy + CTAs -->
           <div class="mx-auto mt-32 max-w-3xl lg:mx-0 lg:mt-0 lg:max-w-xl lg:pt-8">
-            <div class="mt-10 space-y-2">
-              <h6 class="text-base font-bold tracking-wide">
-                Enfin,
-              </h6>
+            <div class="mt-10">
               <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">
                 Créez une signature d’e-mail professionnelle en quelques minutes.
               </h1>
@@ -274,6 +285,13 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </section>
+
+      <!-- Footer -->
+      <footer class="container mx-auto max-w-7xl px-6 py-8 lg:px-12">
+        <div class="flex justify-end">
+          <PreviewFooter />
+        </div>
+      </footer>
     </main>
   </div>
 </template>

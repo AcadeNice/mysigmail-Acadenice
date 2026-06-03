@@ -28,7 +28,9 @@ const computedStyle = computed(() => {
 
 const isImage = computed(() => cta.value.type === 'image')
 
-const defaultCtaImage = `/assets/cta-demo.png`
+// Absolute URL so the image resolves in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+const defaultCtaImage = `${publicBase}/assets/cta-demo.png`
 </script>
 
 <template>

@@ -11,7 +11,15 @@ import { useSonner } from '@/composables/useSonner'
 import { useTemplateData } from '@/data/templates'
 import { clone } from '@/utils'
 
-import type { Addon, AddonBanner, AddonTrackingPixel, AddonValue, Signature, Social } from './types'
+import type {
+  Addon,
+  AddonBanner,
+  AddonTrackingPixel,
+  AddonValue,
+  BasicTool,
+  Signature,
+  Social,
+} from './types'
 
 const { sonner } = useSonner()
 const { templates } = useTemplateData()
@@ -30,6 +38,72 @@ const installed = ref<Signature>(templates[0])
 const mainFields = computed(() => installed.value.tools.basic.filter((i) => i.type !== 'image'))
 const isMainFieldsEmpty = computed(() => mainFields.value.every((i) => !i.value))
 const imageField = computed(() => installed.value.tools.basic[0].value)
+
+function sameLabel(field: BasicTool, label: string) {
+  return field.label.trim().toLowerCase() === label.toLowerCase()
+}
+
+function findField(basic: BasicTool[], id: string, label: string) {
+  return basic.find((field) => field.id === id) ?? basic.find((field) => sameLabel(field, label))
+}
+
+function ensureField(signature: Signature, fieldDefaults: BasicTool) {
+  const basic = signature.tools.basic
+  let field = findField(basic, fieldDefaults.id ?? '', fieldDefaults.label)
+
+  if (!field) {
+    field = clone(fieldDefaults)
+    basic.push(field)
+  }
+
+  field.id = fieldDefaults.id
+  field.main = fieldDefaults.main
+  field.type = fieldDefaults.type
+
+  return field
+}
+
+function moveAfter(basic: BasicTool[], field: BasicTool | undefined, anchor: BasicTool | undefined) {
+  if (!field) return
+
+  const currentIndex = basic.indexOf(field)
+  if (currentIndex < 0) return
+
+  basic.splice(currentIndex, 1)
+
+  const anchorIndex = anchor ? basic.indexOf(anchor) : -1
+  basic.splice(anchorIndex >= 0 ? anchorIndex + 1 : basic.length, 0, field)
+}
+
+function ensureContactFields(signature: Signature) {
+  const basic = signature.tools.basic
+  const email = findField(basic, '', 'Email')
+  const appointment = ensureField(signature, {
+    id: 'appointment-link',
+    label: 'Prendre RDV',
+    main: true,
+    type: 'link',
+    value: '',
+  })
+  const mobile = ensureField(signature, {
+    id: 'phone-mobile',
+    label: 'Portable',
+    main: true,
+    type: 'phone',
+    value: '',
+  })
+  const standard = ensureField(signature, {
+    id: 'phone-standard',
+    label: 'Standard',
+    main: true,
+    type: 'phone',
+    value: '',
+  })
+
+  moveAfter(basic, appointment, email)
+  moveAfter(basic, mobile, appointment)
+  moveAfter(basic, standard, mobile)
+}
 
 const nameField = computed(() => {
   if (isMainFieldsEmpty.value) return templates[0].tools.basic[1]
@@ -132,10 +206,12 @@ function setSocialValue(type: Social, value: string) {
 /** ========= templates ========= */
 function resetInstalledToDefault() {
   installed.value = clone(templates[0])
+  ensureContactFields(installed.value)
   installed.value.tools.basic.forEach((i) => (i.value = ''))
 }
 
 function setTemplate(signature: Signature) {
+  ensureContactFields(installed.value)
   installed.value.name = signature.name
   installed.value.label = signature.label
 
@@ -218,6 +294,7 @@ async function uploadJSON(json: string) {
   }
 
   installed.value = stripBannerIfGuest(data as Signature)
+  ensureContactFields(installed.value)
 }
 
 /** ========= init / autosave ========= */
@@ -231,6 +308,7 @@ function init() {
   try {
     const data = JSON.parse(unsavedSignature) as Signature
     installed.value = stripBannerIfGuest(data)
+    ensureContactFields(installed.value)
     // unsavedSignatureStore.value = ''
   } catch (err) {
     console.error(err)

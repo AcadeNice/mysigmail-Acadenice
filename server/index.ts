@@ -23,8 +23,8 @@ app.set('trust proxy', 2)
 
 // Single CORS configuration for both dev and prod.
 // FRONT_ORIGIN should be set in the environment in production
-// (e.g. https://sign.a3n.fr). In dev we fall back to Vite default.
-const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'https://sign.a3n.fr'
+// (e.g. https://sign.acadenice.com). In dev we fall back to Vite default.
+const FRONT_ORIGIN = process.env.FRONT_ORIGIN || 'https://sign.acadenice.com'
 app.use(cors({ origin: FRONT_ORIGIN, credentials: true }))
 
 app.use(express.json())
@@ -113,7 +113,7 @@ app.get('/api/auth/status', (req, res) => {
     return res.json({ role: 'guest' })
   }
 })
-app.post('/api/disconnect-all', async (req, res) => {
+app.post('/api/disconnect-all', async (_req, res) => {
   try {
     // 1) logout
     res.clearCookie('access_token')

@@ -2,6 +2,9 @@ import type { AddonTool } from '@/composables/signatures/types'
 
 import { disclaimerPresets } from './disclaimer-pressets'
 
+// Absolute URL so the banner resolves in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+
 export const addons: AddonTool[] = [
   {
     label: 'Mobile App',
@@ -32,7 +35,7 @@ export const addons: AddonTool[] = [
     type: 'banner',
     isNew: false,
     value: {
-      image: '/assets/acadenice-banner.png',
+      image: `${publicBase}/assets/acadenice-banner.png`,
       link: 'https://acadenice.fr',
       width: 35,
     },

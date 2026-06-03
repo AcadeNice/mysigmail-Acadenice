@@ -16,6 +16,11 @@ defineProps<Props>()
 const { getAddonValue } = useSignatures()
 
 const mobileApp = computed(() => getAddonValue<AddonMobileApp>('mobileApp'))
+
+// Absolute URL so badges resolve in mail clients (relative paths break in Gmail/Outlook)
+const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
+const appStoreBadge = `${publicBase}/assets/app-store-badge.png`
+const googlePlayBadge = `${publicBase}/assets/google-play-badge.png`
 </script>
 
 <template>
@@ -30,7 +35,7 @@ const mobileApp = computed(() => getAddonValue<AddonMobileApp>('mobileApp'))
             <img
               width="118"
               height="35"
-              src="/assets/app-store-badge.png"
+              :src="appStoreBadge"
               alt="app store badge"
             >
           </a>
@@ -49,7 +54,7 @@ const mobileApp = computed(() => getAddonValue<AddonMobileApp>('mobileApp'))
             <img
               width="118"
               height="35"
-              src="/assets/google-play-badge.png"
+              :src="googlePlayBadge"
               alt="google play badge"
             >
           </a>
