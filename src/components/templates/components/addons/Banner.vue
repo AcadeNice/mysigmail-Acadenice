@@ -38,6 +38,7 @@ const imgKey = computed(() => bannerSrc.value)
         <a
           :href="normalizeUrl(banner.link)"
           target="_blank"
+          rel="noopener noreferrer"
           style="text-decoration: none"
         >
           <img

@@ -59,6 +59,8 @@ const computedStyle = computed(() => {
           >
             <a
               :href="normalizeUrl(i.value)"
+              target="_blank"
+              rel="noopener noreferrer"
               style="display: inline-block; border-radius: 3px"
             >
               <img

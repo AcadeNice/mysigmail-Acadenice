@@ -31,7 +31,11 @@ const googlePlayBadge = `${publicBase}/assets/google-play-badge.png`
         :style="tdStyle"
       >
         <p style="margin: 0; line-height: 0">
-          <a :href="normalizeUrl(mobileApp.appStore)">
+          <a
+            :href="normalizeUrl(mobileApp.appStore)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img
               width="118"
               height="35"
@@ -50,7 +54,11 @@ const googlePlayBadge = `${publicBase}/assets/google-play-badge.png`
         :style="tdStyle"
       >
         <p style="margin: 0; line-height: 0">
-          <a :href="normalizeUrl(mobileApp.googlePlay)">
+          <a
+            :href="normalizeUrl(mobileApp.googlePlay)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img
               width="118"
               height="35"
