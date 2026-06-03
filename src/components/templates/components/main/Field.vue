@@ -7,7 +7,8 @@ import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs, getFieldDisplayValue, shouldShowFieldLabel } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, isAppointmentLink, shouldShowFieldLabel } from '../utils'
+import AppointmentButton from './AppointmentButton.vue'
 
 interface Props {
   model: BasicTool
@@ -68,8 +69,17 @@ const inlineFields = computed(() => inlineFieldsFor(props.model))
           :style="{ color: labelColor }"
         >{{ model.label }}&nbsp;:&nbsp;&nbsp;</span>
 
+        <AppointmentButton
+          v-if="isAppointmentLink(model)"
+          :model="model"
+          :font="font"
+          :text-color="textColor"
+          :enable-analytics="enableAnalytics"
+          :analytic-tag="analyticTag"
+        />
+
         <Base.Link
-          v-if="model.type !== 'text'"
+          v-else-if="model.type !== 'text'"
           v-bind="anchorAttrs"
         >
           {{ displayValue }}
@@ -92,8 +102,14 @@ const inlineFields = computed(() => inlineFieldsFor(props.model))
             v-bind="$attrs"
             :style="{ color: labelColor }"
           >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
+          <AppointmentButton
+            v-if="isAppointmentLink(inlineField)"
+            :model="inlineField"
+            :font="font"
+            :text-color="textColor"
+          />
           <Base.Link
-            v-if="inlineField.type !== 'text'"
+            v-else-if="inlineField.type !== 'text'"
             v-bind="getAnchorAttrs(inlineField, textColor)"
           >
             {{ getFieldDisplayValue(inlineField) }}

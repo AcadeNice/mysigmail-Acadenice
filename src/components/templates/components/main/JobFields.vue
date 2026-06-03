@@ -5,7 +5,8 @@ import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs, getFieldDisplayValue, shouldShowFieldLabel } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, isAppointmentLink, shouldShowFieldLabel } from '../utils'
+import AppointmentButton from './AppointmentButton.vue'
 
 interface Props {
   model: BasicTool[]
@@ -55,8 +56,14 @@ const { inlineFieldsFor } = useSignatures()
               v-bind="$attrs"
               :style="{ color: labelColor }"
             >{{ i.label }}&nbsp;:&nbsp;&nbsp;</span>
+            <AppointmentButton
+              v-if="isAppointmentLink(i)"
+              :model="i"
+              :font="font"
+              :text-color="textColor"
+            />
             <Base.Link
-              v-if="i.type !== 'text'"
+              v-else-if="i.type !== 'text'"
               v-bind="getAnchorAttrs(i, textColor)"
             >
               {{ getFieldDisplayValue(i) }}
@@ -79,8 +86,14 @@ const { inlineFieldsFor } = useSignatures()
                 v-bind="$attrs"
                 :style="{ color: labelColor }"
               >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
+              <AppointmentButton
+                v-if="isAppointmentLink(inlineField)"
+                :model="inlineField"
+                :font="font"
+                :text-color="textColor"
+              />
               <Base.Link
-                v-if="inlineField.type !== 'text'"
+                v-else-if="inlineField.type !== 'text'"
                 v-bind="getAnchorAttrs(inlineField, textColor)"
               >
                 {{ getFieldDisplayValue(inlineField) }}
@@ -106,8 +119,14 @@ const { inlineFieldsFor } = useSignatures()
             v-bind="$attrs"
             :style="{ color: labelColor }"
           >{{ i.label }}&nbsp;:&nbsp;&nbsp;</span>
+          <AppointmentButton
+            v-if="isAppointmentLink(i)"
+            :model="i"
+            :font="font"
+            :text-color="textColor"
+          />
           <Base.Link
-            v-if="i.type !== 'text'"
+            v-else-if="i.type !== 'text'"
             v-bind="getAnchorAttrs(i, textColor)"
           >
             {{ getFieldDisplayValue(i) }}
@@ -130,8 +149,14 @@ const { inlineFieldsFor } = useSignatures()
               v-bind="$attrs"
               :style="{ color: labelColor }"
             >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
+            <AppointmentButton
+              v-if="isAppointmentLink(inlineField)"
+              :model="inlineField"
+              :font="font"
+              :text-color="textColor"
+            />
             <Base.Link
-              v-if="inlineField.type !== 'text'"
+              v-else-if="inlineField.type !== 'text'"
               v-bind="getAnchorAttrs(inlineField, textColor)"
             >
               {{ getFieldDisplayValue(inlineField) }}

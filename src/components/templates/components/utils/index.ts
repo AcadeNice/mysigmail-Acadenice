@@ -40,6 +40,10 @@ export function usesLabelAsLinkText(tool: BasicTool) {
   return tool.type === 'link' && tool.id !== 'website-link'
 }
 
+export function isAppointmentLink(tool: BasicTool) {
+  return tool.type === 'link' && tool.id === 'appointment-link'
+}
+
 function normalizeLabel(label: string) {
   return label
     .trim()
