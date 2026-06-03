@@ -123,7 +123,7 @@ const jobSeparator = computed({
         <div class="flex items-center h-5">
           <UiSlider
             v-model="avatarSize"
-            :max="150"
+            :max="250"
             :min="50"
           />
         </div>
