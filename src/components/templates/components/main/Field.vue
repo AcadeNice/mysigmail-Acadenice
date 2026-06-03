@@ -7,7 +7,7 @@ import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs, getFieldDisplayValue, usesLabelAsLinkText } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, shouldShowFieldLabel } from '../utils'
 
 interface Props {
   model: BasicTool
@@ -44,7 +44,7 @@ const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
 
 const displayValue = computed(() => getFieldDisplayValue(props.model))
 const showFieldLabel = computed(
-  () => props.showLabel && props.model.label && !usesLabelAsLinkText(props.model),
+  () => shouldShowFieldLabel(props.model, props.showLabel),
 )
 </script>
 

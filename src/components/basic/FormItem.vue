@@ -12,11 +12,16 @@ const props = defineProps<Props>()
 const { installed } = useSignatures()
 
 const localValue = ref(clone<BasicTool>(props.value))
+
+function isSameTool(a: BasicTool, b: BasicTool) {
+  return a.id === b.id && a.label === b.label && a.type === b.type && a.value === b.value
+}
+
 const contentLabel = computed(() => {
-  if (localValue.value.type === 'link') return 'Lien'
+  if (localValue.value.type === 'link') return 'URL du lien'
   if (localValue.value.type === 'email') return 'Adresse e-mail'
-  if (localValue.value.type === 'phone') return 'Téléphone'
-  return 'Contenu'
+  if (localValue.value.type === 'phone') return 'Numéro de téléphone'
+  return 'Texte affiché'
 })
 
 const contentPlaceholder = computed(() => {
@@ -26,13 +31,28 @@ const contentPlaceholder = computed(() => {
   return ''
 })
 
-// +1 потому что первый элемент это изображение
-const index = props.index + 1
+function findInstalledIndex(tool: BasicTool) {
+  if (!installed.value) return -1
+
+  const basic = installed.value.tools.basic
+  const id = tool.id ?? props.value.id
+
+  if (id) {
+    const indexById = basic.findIndex((i) => i.id === id)
+    if (indexById >= 0) return indexById
+  }
+
+  const visibleFields = basic.filter((i) => i.type !== 'image')
+  const visibleField = visibleFields[props.index]
+  return visibleField ? basic.indexOf(visibleField) : -1
+}
 
 function update(tool: BasicTool) {
   if (!installed.value) return
 
   const { label, type, value } = tool
+  const index = findInstalledIndex(tool)
+  if (index < 0) return
 
   installed.value.tools.basic[index].label = label
   installed.value.tools.basic[index].type = type
@@ -41,9 +61,20 @@ function update(tool: BasicTool) {
 
 function onRemoveField() {
   if (!installed.value) return
+  const index = findInstalledIndex(localValue.value)
+  if (index < 0) return
+
   installed.value.tools.basic.splice(index, 1)
 }
 
+watch(
+  () => props.value,
+  (v) => {
+    if (isSameTool(localValue.value, v)) return
+    localValue.value = clone<BasicTool>(v)
+  },
+  { deep: true },
+)
 watch(localValue, (v) => update(v), { deep: true })
 </script>
 

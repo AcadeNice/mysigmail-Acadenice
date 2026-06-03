@@ -5,7 +5,7 @@ import type { BasicTool } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
 
-import { getAnchorAttrs, getFieldDisplayValue, usesLabelAsLinkText } from '../utils'
+import { getAnchorAttrs, getFieldDisplayValue, shouldShowFieldLabel } from '../utils'
 
 interface Props {
   model: BasicTool[]
@@ -48,7 +48,7 @@ withDefaults(defineProps<Props>(), {
               :style="separatorStyle"
             >&nbsp;&nbsp;{{ separator }}&nbsp;&nbsp;</span>
             <span
-              v-if="showLabel && i.label && !usesLabelAsLinkText(i)"
+              v-if="shouldShowFieldLabel(i, showLabel)"
               style="padding-right: 0px; font-weight: 600"
               v-bind="$attrs"
               :style="{ color: labelColor }"
@@ -76,7 +76,7 @@ withDefaults(defineProps<Props>(), {
           :style="{ ...font }"
         >
           <span
-            v-if="showLabel && i.label && !usesLabelAsLinkText(i)"
+            v-if="shouldShowFieldLabel(i, showLabel)"
             style="padding-right: 0px; font-weight: 600"
             v-bind="$attrs"
             :style="{ color: labelColor }"

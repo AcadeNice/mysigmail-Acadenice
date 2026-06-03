@@ -37,14 +37,40 @@ const installed = ref<Signature>(templates[0])
 /** ========= basic ========= */
 const mainFields = computed(() => installed.value.tools.basic.filter((i) => i.type !== 'image'))
 const isMainFieldsEmpty = computed(() => mainFields.value.every((i) => !i.value))
-const imageField = computed(() => installed.value.tools.basic[0].value)
+const imageField = computed(() => installed.value.tools.basic.find((i) => i.type === 'image')?.value ?? '')
+const defaultMainFields = computed(() => templates[0].tools.basic.filter((i) => i.type !== 'image'))
+
+function normalizeLabel(label: string) {
+  return label
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036F]/g, '')
+}
 
 function sameLabel(field: BasicTool, label: string) {
-  return field.label.trim().toLowerCase() === label.toLowerCase()
+  return normalizeLabel(field.label) === normalizeLabel(label)
 }
 
 function findField(basic: BasicTool[], id: string, label: string) {
   return basic.find((field) => field.id === id) ?? basic.find((field) => sameLabel(field, label))
+}
+
+function ensureCoreFieldIds(signature: Signature) {
+  const basic = signature.tools.basic
+  const coreFields = [
+    { id: 'avatar', label: 'Avatar' },
+    { id: 'full-name', label: 'Nom complet' },
+    { id: 'job-title', label: 'Intitulé du poste' },
+    { id: 'organization', label: 'Entreprise' },
+    { id: 'website-link', label: 'Website' },
+    { id: 'email-address', label: 'Email' },
+  ]
+
+  coreFields.forEach(({ id, label }) => {
+    const field = findField(basic, id, label)
+    if (field) field.id = id
+  })
 }
 
 function ensureField(signature: Signature, fieldDefaults: BasicTool) {
@@ -105,18 +131,23 @@ function ensureContactFields(signature: Signature) {
   moveAfter(basic, standard, mobile)
 }
 
+function ensureSignatureFields(signature: Signature) {
+  ensureCoreFieldIds(signature)
+  ensureContactFields(signature)
+}
+
 const nameField = computed(() => {
-  if (isMainFieldsEmpty.value) return templates[0].tools.basic[1]
-  return installed.value.tools.basic[1]
+  if (isMainFieldsEmpty.value) return defaultMainFields.value[0]
+  return mainFields.value[0]
 })
 
 const jobFields = computed(() => {
-  if (isMainFieldsEmpty.value) return templates[0].tools.basic.slice(2, 4)
+  if (isMainFieldsEmpty.value) return defaultMainFields.value.slice(1, 3)
   return mainFields.value.slice(1, 3)
 })
 
 const otherFields = computed(() => {
-  if (isMainFieldsEmpty.value) return templates[0].tools.basic.slice(4)
+  if (isMainFieldsEmpty.value) return defaultMainFields.value.slice(3)
   return mainFields.value.slice(3)
 })
 
@@ -206,12 +237,12 @@ function setSocialValue(type: Social, value: string) {
 /** ========= templates ========= */
 function resetInstalledToDefault() {
   installed.value = clone(templates[0])
-  ensureContactFields(installed.value)
+  ensureSignatureFields(installed.value)
   installed.value.tools.basic.forEach((i) => (i.value = ''))
 }
 
 function setTemplate(signature: Signature) {
-  ensureContactFields(installed.value)
+  ensureSignatureFields(installed.value)
   installed.value.name = signature.name
   installed.value.label = signature.label
 
@@ -294,7 +325,7 @@ async function uploadJSON(json: string) {
   }
 
   installed.value = stripBannerIfGuest(data as Signature)
-  ensureContactFields(installed.value)
+  ensureSignatureFields(installed.value)
 }
 
 /** ========= init / autosave ========= */
@@ -303,12 +334,15 @@ function init() {
   isInit.value = true
 
   const unsavedSignature = unsavedSignatureStore.value
-  if (!unsavedSignature) return
+  if (!unsavedSignature) {
+    ensureSignatureFields(installed.value)
+    return
+  }
 
   try {
     const data = JSON.parse(unsavedSignature) as Signature
     installed.value = stripBannerIfGuest(data)
-    ensureContactFields(installed.value)
+    ensureSignatureFields(installed.value)
     // unsavedSignatureStore.value = ''
   } catch (err) {
     console.error(err)

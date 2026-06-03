@@ -22,6 +22,13 @@ const firstFiled = ref()
 
 useFocus(firstFiled, { initialValue: true })
 
+const valueLabel = computed(() => {
+  if (field.value.type === 'link') return 'URL du lien'
+  if (field.value.type === 'email') return 'Adresse e-mail'
+  if (field.value.type === 'phone') return 'Numéro de téléphone'
+  return 'Texte affiché'
+})
+
 function onAddField() {
   if (!installed.value) return
   installed.value.tools.basic.push(clone(field.value))
@@ -42,21 +49,21 @@ function reset() {
   <UiDialog v-model:open="open">
     <UiDialogTrigger class="w-full mt-7">
       <UiButton class="w-full">
-        Add Custom Field
+        Ajouter un champ
       </UiButton>
     </UiDialogTrigger>
     <UiDialogContent>
       <UiDialogHeader>
-        <UiDialogTitle>Add Custom Field</UiDialogTitle>
+        <UiDialogTitle>Ajouter un champ</UiDialogTitle>
       </UiDialogHeader>
       <UiFieldForm label-position="top">
-        <UiFieldFormItem label="Label">
+        <UiFieldFormItem label="Libellé">
           <UiInput
             ref="firstFiled"
             v-model="field.label"
           />
         </UiFieldFormItem>
-        <UiFieldFormItem label="Value">
+        <UiFieldFormItem :label="valueLabel">
           <UiInput v-model="field.value" />
         </UiFieldFormItem>
         <UiFieldFormItem label="Type">
@@ -83,7 +90,7 @@ function reset() {
           class="w-full mt-3"
           @click="onAddField"
         >
-          Add Field
+          Ajouter
         </UiButton>
       </UiDialogFooter>
     </UiDialogContent>

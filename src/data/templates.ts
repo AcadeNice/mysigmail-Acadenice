@@ -1,8 +1,6 @@
 /*
    - For guests, the "banner" addon is filtered out from all templates/defaults.
 */
-import { nanoid } from 'nanoid'
-
 import type {
   AddonTool,
   BasicTool,
@@ -35,19 +33,19 @@ export function useTemplateData() {
 
   const DEFAULTS = {
     basic: [
-      { id: nanoid(8), label: 'Avatar', type: 'image', main: true, value: '' },
-      { id: nanoid(8), label: 'Nom complet', type: 'text', main: true, value: 'Nom Prénom' },
+      { id: 'avatar', label: 'Avatar', type: 'image', main: true, value: '' },
+      { id: 'full-name', label: 'Nom complet', type: 'text', main: true, value: 'Nom Prénom' },
       {
-        id: nanoid(8),
+        id: 'job-title',
         label: 'Intitulé du poste',
         type: 'text',
         main: true,
         value: 'Enseignant',
       },
-      { id: nanoid(8), label: 'Entreprise', type: 'text', main: true, value: 'AcadéNice' },
-      { id: nanoid(8), label: 'Website', type: 'link', main: true, value: 'https://acadenice.fr' },
+      { id: 'organization', label: 'Entreprise', type: 'text', main: true, value: 'AcadéNice' },
+      { id: 'website-link', label: 'Website', type: 'link', main: true, value: 'https://acadenice.fr' },
       {
-        id: nanoid(8),
+        id: 'email-address',
         label: 'Email',
         type: 'email',
         main: true,
