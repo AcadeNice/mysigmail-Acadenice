@@ -34,6 +34,6 @@ export const options: AnalyticsItem[] = [
   { name: 'Google Play', value: 'googlePlay' },
   // Other
   { name: 'Website', value: 'website' },
-  { name: 'Banner', value: 'banner' },
+  { name: 'Bannière', value: 'banner' },
   { name: 'Logo', value: 'logo' },
 ]

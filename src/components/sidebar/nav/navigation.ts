@@ -27,7 +27,7 @@ export const main = [
     icon: UilBrushAlt,
   },
   {
-    name: 'Addons',
+    name: 'Modules',
     path: '/addons',
     icon: UilCreateDashboard,
   },

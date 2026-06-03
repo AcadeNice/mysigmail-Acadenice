@@ -59,30 +59,30 @@ function onUploaded(path: string) {
 
 <template>
   <UiFieldForm>
-    <UiFieldFormItem label="Enable Image">
+    <UiFieldFormItem label="Utiliser une image">
       <UiSwitch
         :model-value="type === 'image'"
         @update:model-value="type = $event ? 'image' : 'text'"
       />
     </UiFieldFormItem>
     <template v-if="type === 'text'">
-      <UiFieldFormItem label="Text">
+      <UiFieldFormItem label="Texte">
         <UiInput v-model="text" />
       </UiFieldFormItem>
-      <UiFieldFormItem label="Link">
+      <UiFieldFormItem label="Lien">
         <UiInput v-model="link" />
       </UiFieldFormItem>
-      <UiFieldFormItem label="Background Color">
+      <UiFieldFormItem label="Couleur de fond">
         <UiColorPicker v-model="bgColor" />
       </UiFieldFormItem>
-      <UiFieldFormItem label="Text Color">
+      <UiFieldFormItem label="Couleur du texte">
         <UiColorPicker v-model="textColor" />
       </UiFieldFormItem>
     </template>
     <template v-if="type === 'image'">
       <UiFieldFormItem
         label="Image"
-        description="You can upload image or paste the public link to image."
+        description="Vous pouvez importer une image ou coller son lien public."
       >
         <div class="flex items-center gap-2">
           <UiInput
@@ -92,12 +92,12 @@ function onUploaded(path: string) {
           <UiUpload @uploaded="onUploaded" />
         </div>
       </UiFieldFormItem>
-      <UiFieldFormItem label="Link">
+      <UiFieldFormItem label="Lien">
         <UiInput v-model="link" />
       </UiFieldFormItem>
       <UiFieldFormItem
-        label="Width"
-        :description="`Width in percentage. Current: ${width}%`"
+        label="Largeur"
+        :description="`Largeur en pourcentage. Actuelle : ${width}%`"
       >
         <div class="flex items-center h-5">
           <UiSlider

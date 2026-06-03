@@ -7,7 +7,7 @@ const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origi
 
 export const addons: AddonTool[] = [
   {
-    label: 'Mobile App',
+    label: 'Application mobile',
     type: 'mobileApp',
     isNew: false,
     value: {
@@ -25,17 +25,16 @@ export const addons: AddonTool[] = [
   //   },
   // },
   {
-    label: 'Disclaimer',
+    label: 'Clause de confidentialité',
     type: 'disclaimer',
     isNew: false,
     value: {
       text: disclaimerPresets[0].value,
       fontSize: 12,
-      fullWidth: false,
     },
   },
   {
-    label: 'Banner',
+    label: 'Bannière',
     type: 'banner',
     isNew: false,
     value: {

@@ -221,7 +221,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {
@@ -301,7 +301,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {
@@ -525,7 +525,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {
@@ -534,7 +534,7 @@ export const presets: Preset[] = [
           },
         },
         {
-          label: 'Disclaimer',
+          label: 'Clause de confidentialité',
           type: 'disclaimer',
           isNew: false,
           value:
@@ -613,7 +613,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {
@@ -702,7 +702,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {
@@ -864,7 +864,7 @@ export const presets: Preset[] = [
       },
       addons: [
         {
-          label: 'Banner',
+          label: 'Bannière',
           type: 'banner',
           isNew: false,
           value: {

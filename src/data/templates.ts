@@ -83,7 +83,7 @@ export function useTemplateData() {
 
     addons: [
       {
-        label: 'Banner',
+        label: 'Bannière',
         type: 'banner',
         isNew: false,
         value: {
@@ -95,7 +95,6 @@ export function useTemplateData() {
 
     socials: [
       { icon: 'facebook', value: 'https://facebook.com/acadenice', label: 'Facebook' },
-      { icon: 'twitter', value: 'https://x.com/acadenice', label: 'Twitter' },
       { icon: 'linkedin', value: 'https://linkedin.com/school/acadenice', label: 'LinkedIn' },
       { icon: 'instagram', value: 'https://instagram.com/acadenice', label: 'Instagram' },
       { icon: 'tiktok', value: 'https://www.tiktok.com/@acadenice', label: 'TikTok' },

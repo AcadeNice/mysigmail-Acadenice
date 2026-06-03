@@ -19,26 +19,16 @@ const disclaimer = computed(() => {
     return {
       text: value,
       fontSize: options.value?.fontSize ?? 12,
-      fullWidth: false,
     }
   }
 
   return {
     text: value?.text ?? '',
     fontSize: value?.fontSize ?? options.value?.fontSize ?? 12,
-    fullWidth: value?.fullWidth ?? false,
   }
 })
 
-const displayText = computed(() => disclaimer.value.text.replace(/\s*\r?\n\s*/g, ' ').trim())
-const tableWidth = computed(() => (disclaimer.value.fullWidth ? '100%' : 'auto'))
-const cellStyle = computed(() => {
-  const style: HTMLAttributes['style'] = {
-    width: disclaimer.value.fullWidth ? '100%' : undefined,
-  }
-
-  return style
-})
+const displayText = computed(() => disclaimer.value.text.replace(/\s*\n\s*/g, ' ').trim())
 
 const computedStyle = computed(() => {
   const style: HTMLAttributes['style'] = {
@@ -46,7 +36,6 @@ const computedStyle = computed(() => {
     fontSize: `${disclaimer.value.fontSize}px`,
     lineHeight: `${Math.round(disclaimer.value.fontSize * 1.45)}px`,
     margin: '0',
-    width: disclaimer.value.fullWidth ? '100%' : undefined,
   }
 
   if (options.value) {
@@ -58,9 +47,9 @@ const computedStyle = computed(() => {
 </script>
 
 <template>
-  <Base.Table :width="tableWidth">
+  <Base.Table width="auto">
     <tr>
-      <td :style="[tdStyle, cellStyle]">
+      <td :style="tdStyle">
         <div :style="computedStyle">
           {{ displayText }}
         </div>

@@ -59,11 +59,14 @@ const NEXT_DEFAULT_VIDEO_CONFERENCE = {
   text: 'Me rejoindre sur Google Meet',
   link: 'https://meet.google.com/calling/',
 } as const
+const DEFAULT_MOBILE_APP_LABEL = 'Application mobile'
+const DEFAULT_DISCLAIMER_LABEL = 'Clause de confidentialité'
 const DEFAULT_LOGO = {
   image: `${window.location.origin}/assets/logo-acadenice.png`,
   link: 'https://acadenice.fr',
 }
 const DEFAULT_BANNER = {
+  label: 'Bannière',
   image: `${window.location.origin}/assets/acadenice-banniere.png`,
   link: 'https://acadenice.fr',
 }
@@ -225,6 +228,16 @@ function ensureDefaultOptionColors(signature: Signature) {
 }
 
 function ensureDefaultSocials(signature: Signature) {
+  signature.tools.socials = signature.tools.socials.filter((social) => {
+    const normalizedValue = social.value
+      .trim()
+      .replace(/^https?:\/\/(www\.)?/i, '')
+      .replace(/\/$/, '')
+      .toLowerCase()
+
+    return !(social.icon === 'twitter' && normalizedValue === 'x.com/acadenice')
+  })
+
   const requiredSocials: SocialTool[] = [
     {
       icon: 'tiktok',
@@ -248,6 +261,8 @@ function ensureDefaultDisclaimer(signature: Signature) {
   const disclaimer = signature.tools.addons.find((addon) => addon.type === 'disclaimer')
   if (!disclaimer) return
 
+  disclaimer.label = DEFAULT_DISCLAIMER_LABEL
+
   if (typeof disclaimer.value === 'string') {
     const text = disclaimer.value.trim() === OLD_DEFAULT_DISCLAIMER
       ? disclaimerPresets[0].value
@@ -256,7 +271,6 @@ function ensureDefaultDisclaimer(signature: Signature) {
     disclaimer.value = {
       text,
       fontSize: 12,
-      fullWidth: false,
     }
     return
   }
@@ -270,9 +284,7 @@ function ensureDefaultDisclaimer(signature: Signature) {
   if (!value.fontSize) {
     value.fontSize = 12
   }
-  if (typeof value.fullWidth !== 'boolean') {
-    value.fullWidth = false
-  }
+  delete (value as { fullWidth?: boolean }).fullWidth
 }
 
 function ensureDefaultCta(signature: Signature) {
@@ -320,12 +332,19 @@ function ensureDefaultBanner(signature: Signature) {
   const banner = signature.tools.addons.find((addon) => addon.type === 'banner')
   if (!banner || typeof banner.value !== 'object' || banner.value === null || Array.isArray(banner.value)) return
 
+  banner.label = DEFAULT_BANNER.label
+
   const value = banner.value as AddonBanner
   if (!value.image || value.image.endsWith('/assets/acadenice-banner.png')) {
     value.image = DEFAULT_BANNER.image
   }
   if (!value.link) value.link = DEFAULT_BANNER.link
   delete (value as Partial<AddonBanner>).width
+}
+
+function ensureDefaultMobileApp(signature: Signature) {
+  const mobileApp = signature.tools.addons.find((addon) => addon.type === 'mobileApp')
+  if (mobileApp) mobileApp.label = DEFAULT_MOBILE_APP_LABEL
 }
 
 function ensureDefaultLogo(signature: Signature) {
@@ -346,6 +365,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureDefaultCta(signature)
   ensureDefaultVideoConference(signature)
   ensureDefaultBanner(signature)
+  ensureDefaultMobileApp(signature)
   ensureDefaultLogo(signature)
 }
 

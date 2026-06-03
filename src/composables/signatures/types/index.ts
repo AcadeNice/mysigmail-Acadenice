@@ -23,7 +23,6 @@ export interface AddonVideoConference {
 export interface AddonDisclaimer {
   text: string
   fontSize?: number
-  fullWidth?: boolean
 }
 
 export interface AddonCTA {

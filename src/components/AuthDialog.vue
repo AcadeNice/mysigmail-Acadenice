@@ -83,7 +83,7 @@ function onKeydown(e: KeyboardEvent) {
           Accès réservé
         </UiDialogTitle>
         <UiDialogDescription :class="isDark ? 'text-[#EAF0FF]/90' : 'text-neutral-600'">
-          Entrez le mot de passe pour accéder aux fonctions réservées au personnel.
+          Entrez le mot de passe pour accéder aux fonctions réservées au personnel d'AcadéNice.
         </UiDialogDescription>
       </UiDialogHeader>
 

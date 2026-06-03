@@ -19,7 +19,7 @@ function addAddon(addon: AddonTool) {
 
 <template>
   <div>
-    <h3>Installed</h3>
+    <h3>Installés</h3>
     <div class="space-y-2 mb-4">
       <template v-if="addons.length > 0">
         <AddonsListItemInstaled
@@ -33,12 +33,12 @@ function addAddon(addon: AddonTool) {
         v-else
         class="text-sm text-muted-foreground"
       >
-        No addons installed
+        Aucun module installé
       </div>
     </div>
   </div>
   <div>
-    <h3>Addons</h3>
+    <h3>Modules</h3>
     <div>
       <AddonsListItem
         v-for="addon in addonsList"

@@ -23,13 +23,6 @@ const fontSize = computed({
   },
 })
 
-const fullWidth = computed({
-  get: () => disclaimer.value.fullWidth ?? false,
-  set: (value) => {
-    patchAddonValue<AddonDisclaimer>('disclaimer', 'fullWidth', value)
-  },
-})
-
 watch(selectedPreset, (v) => (v ? (text.value = v) : null))
 </script>
 
@@ -54,7 +47,7 @@ watch(selectedPreset, (v) => (v ? (text.value = v) : null))
       @update:model-value="selectedPreset = ''"
     />
     <p class="desc">
-      Écrivez votre texte de disclaimer ou sélectionnez un modèle.
+      Écrivez votre clause de confidentialité ou sélectionnez un modèle.
     </p>
     <UiFieldForm>
       <UiFieldFormItem
@@ -68,16 +61,6 @@ watch(selectedPreset, (v) => (v ? (text.value = v) : null))
             :max="16"
           />
         </div>
-      </UiFieldFormItem>
-      <UiFieldFormItem label="Largeur">
-        <label class="flex items-center gap-2 text-sm cursor-pointer select-none">
-          <input
-            v-model="fullWidth"
-            type="checkbox"
-            class="size-4 rounded border border-input accent-primary"
-          >
-          <span>Largeur complète</span>
-        </label>
       </UiFieldFormItem>
     </UiFieldForm>
   </div>

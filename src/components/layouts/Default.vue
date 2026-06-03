@@ -28,7 +28,8 @@
     </div>
     <div
       data-preview
-      class="bg-accent dark:bg-accent/20 p-6 overflow-y-auto"
+      class="p-6 overflow-y-auto"
+      style="background: linear-gradient(135deg, #fff 0%, #fff 48%, rgba(76, 204, 184, 0.18) 100%);"
     >
       <Preview />
     </div>

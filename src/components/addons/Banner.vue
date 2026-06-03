@@ -25,7 +25,7 @@ const link = computed<string>({
 <template>
   <UiFieldForm>
     <UiFieldFormItem
-      label="Image URL"
+      label="URL de l'image"
       description="Collez un lien public vers l’image. Laissez vide pour utiliser la bannière AcadéNice par défaut."
     >
       <UiInput
@@ -42,7 +42,7 @@ const link = computed<string>({
       </p>
     </UiFieldFormItem>
 
-    <UiFieldFormItem label="Link">
+    <UiFieldFormItem label="Lien">
       <UiInput
         v-model="link"
         placeholder="https://acadenice.fr"

@@ -50,7 +50,7 @@ const routes = [
     path: '/addons',
     component: () => import('@/views/Addons.vue'),
     meta: {
-      title: 'Signature addons',
+      title: 'Modules de signature',
     },
   },
   {
