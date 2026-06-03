@@ -70,6 +70,8 @@ const DEFAULT_BANNER = {
   image: `${window.location.origin}/assets/acadenice-banniere.png`,
   link: 'https://acadenice.fr',
 }
+const OLD_DEFAULT_AVATAR_SIZE = 112
+const NEXT_DEFAULT_AVATAR_SIZE = 158
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -231,6 +233,13 @@ function ensureDefaultOptionColors(signature: Signature) {
   }
 }
 
+function ensureDefaultAvatarSize(signature: Signature) {
+  const options = signature.tools.options
+  if (!options.avatarSize || (signature.name === 'SignatureTemplate1' && options.avatarSize === OLD_DEFAULT_AVATAR_SIZE)) {
+    options.avatarSize = NEXT_DEFAULT_AVATAR_SIZE
+  }
+}
+
 function ensureDefaultSocials(signature: Signature) {
   signature.tools.socials = signature.tools.socials.filter((social) => {
     const normalizedValue = social.value
@@ -369,6 +378,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
   ensureDefaultOptionColors(signature)
+  ensureDefaultAvatarSize(signature)
   ensureDefaultSocials(signature)
   ensureDefaultDisclaimer(signature)
   ensureDefaultCta(signature)
