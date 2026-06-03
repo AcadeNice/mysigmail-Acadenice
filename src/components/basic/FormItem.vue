@@ -29,7 +29,7 @@ const defaultLabels: Record<string, string> = {
   organization: 'Entreprise',
   'website-link': 'Site web',
   'email-address': 'Email',
-  'appointment-link': 'Prendre RDV',
+  'appointment-link': 'Prendre rendez-vous',
   'phone-mobile': 'Portable',
   'phone-standard': 'Standard',
 }
@@ -59,7 +59,7 @@ const valuePlaceholder = computed(() => {
     organization: 'Entreprise',
     'website-link': 'https://exemple.com',
     'email-address': 'prenom.nom@exemple.fr',
-    'appointment-link': 'https://cal.exemple.com/votre-lien',
+    'appointment-link': 'https://cal.acadenice.com/prénom/rdv',
     'phone-mobile': '06 00 00 00 00',
     'phone-standard': '04 00 00 00 00',
   }

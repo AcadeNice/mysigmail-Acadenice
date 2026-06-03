@@ -114,12 +114,17 @@ function moveAfter(basic: BasicTool[], field: BasicTool | undefined, anchor: Bas
 function ensureContactFields(signature: Signature) {
   const basic = signature.tools.basic
   const email = findField(basic, '', 'Email')
+  const oldAppointment = findField(basic, '', 'Prendre RDV')
+  if (oldAppointment && !oldAppointment.id) {
+    oldAppointment.id = 'appointment-link'
+  }
+
   const appointment = ensureField(signature, {
     id: 'appointment-link',
-    label: 'Prendre RDV',
+    label: 'Prendre rendez-vous',
     main: true,
     type: 'link',
-    value: '',
+    value: 'https://cal.acadenice.com/prénom/rdv',
   })
   const mobile = ensureField(signature, {
     id: 'phone-mobile',
@@ -135,6 +140,14 @@ function ensureContactFields(signature: Signature) {
     type: 'phone',
     value: '',
   })
+
+  if (!appointment.label || sameLabel(appointment, 'Prendre RDV')) {
+    appointment.label = 'Prendre rendez-vous'
+  }
+
+  if (!appointment.value) {
+    appointment.value = 'https://cal.acadenice.com/prénom/rdv'
+  }
 
   moveAfter(basic, appointment, email)
   moveAfter(basic, mobile, appointment)
