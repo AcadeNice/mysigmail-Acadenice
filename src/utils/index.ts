@@ -23,21 +23,10 @@ export function buildVideoConferenceUrl(type: VideoConference, rawLink: string) 
   if (!link) {
     if (type === 'skype') return ''
     if (type === 'zoom') return 'https://zoom.us/join'
-    return 'https://meet.google.com/calling/'
   }
 
   if (/^(?:https?:|skype:|zoommtg:|zoomus:)/i.test(link)) {
     return link
-  }
-
-  if (type === 'google-meet' || type === 'hangouts') {
-    const compactMeetCode = link.replace(/\s+/g, '').replace(/-/g, '')
-    if (/^[a-z]{10}$/i.test(compactMeetCode)) {
-      const code = compactMeetCode.replace(/^(.{3})(.{4})(.{3})$/, '$1-$2-$3').toLowerCase()
-      return `https://meet.google.com/${code}`
-    }
-
-    return 'https://meet.google.com/calling/'
   }
 
   if (type === 'zoom') {

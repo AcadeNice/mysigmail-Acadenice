@@ -107,7 +107,7 @@ export type Social
     | 'rss'
     | 'google-business'
 
-export type VideoConference = 'skype' | 'hangouts' | 'google-meet' | 'zoom'
+export type VideoConference = 'skype' | 'zoom'
 
 export interface AddonTool {
   label: string

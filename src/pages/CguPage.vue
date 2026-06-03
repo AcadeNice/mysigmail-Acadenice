@@ -324,10 +324,15 @@ function goBack() {
             11. Propriété intellectuelle et composants open-source
           </h2>
           <p class="mb-2">
-            Le Service s’appuie sur du code open-source, notamment le projet
-            <strong>MySigMail</strong>, disponible publiquement sur GitHub. Ce projet a été modifié
-            et adapté afin de répondre aux besoins des utilisateurs francophones et au contexte
-            d’AcadéNice.
+            Le Service est maintenu sur GitHub sous le nom
+            <a
+              href="https://github.com/AcadeNice/signatures-de-mail-acadenice"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-primary underline-offset-4 hover:underline"
+            >Signatures de mail - AcadéNice</a>. Il s’appuie sur du code open-source, notamment le
+            projet <strong>MySigMail</strong>, et a été modifié afin de répondre aux besoins des
+            utilisateurs francophones et au contexte d’AcadéNice.
           </p>
           <p class="mb-2">
             L’utilisation et la copie du code open-source d’origine restent possibles dans les
@@ -646,10 +651,15 @@ function goBack() {
             11. Intellectual property and open-source components
           </h2>
           <p class="mb-2">
-            The Service relies on open-source code, in particular the
-            <strong>MySigMail</strong> project, which is publicly available on GitHub. This project
-            has been modified and adapted to meet the needs of French-speaking users and the context
-            of AcadéNice.
+            The Service is maintained on GitHub as
+            <a
+              href="https://github.com/AcadeNice/signatures-de-mail-acadenice"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-primary underline-offset-4 hover:underline"
+            >Signatures de mail - AcadéNice</a>. It relies on open-source code, in particular the
+            <strong>MySigMail</strong> project, and has been modified to meet the needs of
+            French-speaking users and the context of AcadéNice.
           </p>
           <p class="mb-2">
             Use and copying of the original open-source code remain possible under the terms of the

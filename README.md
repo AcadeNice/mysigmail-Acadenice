@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<h1 align="center">MySigMail – Fork Acadénice</h1>
+<h1 align="center">Signatures de mail - AcadéNice</h1>
 <p align="center">
   <strong>Générateur de signatures e-mail open source (Gmail, Outlook, Apple Mail, etc.).</strong>
   <br>
@@ -14,8 +14,8 @@
 </p>
 
 <p align="center">
-  <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/antonreshetov/mysigmail">
-  <img alt="Licence AGPL" src="https://img.shields.io/github/license/antonreshetov/mysigmail">
+  <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/AcadeNice/signatures-de-mail-acadenice">
+  <img alt="Licence AGPL" src="https://img.shields.io/github/license/AcadeNice/signatures-de-mail-acadenice">
 </p>
 
 ## 🔁 Projet d’origine
@@ -47,8 +47,8 @@ Ce fork ajoute :
 Si vous souhaitez développer ou tester via Bun :
 
 ```bash
-git clone https://github.com/<votre-compte>/mysigmail-Acadenice
-cd mysigmail-Acadenice
+git clone https://github.com/AcadeNice/signatures-de-mail-acadenice
+cd signatures-de-mail-acadenice
 bun install
 bun run dev
 ```
@@ -128,4 +128,5 @@ Projet sous licence [AGPL-3.0](https://github.com/antonreshetov/mysigmail/blob/m
 
 Copyright (c) 2019-présent, [Anton Reshetov](https://github.com/antonreshetov).
 
-Adaptations francophones et guide Docker : [Acadénice](https://github.com/acadenice).
+Adaptations francophones et guide Docker :
+[Signatures de mail - AcadéNice](https://github.com/AcadeNice/signatures-de-mail-acadenice).

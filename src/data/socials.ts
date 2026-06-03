@@ -14,7 +14,6 @@ export const socials: SocialData[] = [
   { name: 'LinkedIn', icon: 'linkedin' },
   { name: 'YouTube', icon: 'youtube' },
   { name: 'Skype', icon: 'skype' },
-  { name: 'Hangouts', icon: 'hangouts' },
   { name: 'Zoom', icon: 'zoom' },
   { name: 'Teams', icon: 'teams' },
   { name: 'Whereby', icon: 'whereby' },

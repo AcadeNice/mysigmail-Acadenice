@@ -55,9 +55,9 @@ const OLD_DEFAULT_VIDEO_CONFERENCE = {
 } as const
 const NEXT_DEFAULT_VIDEO_CONFERENCE = {
   label: 'Vidéoconférence',
-  type: 'google-meet',
-  text: 'Me rejoindre sur Google Meet',
-  link: 'https://meet.google.com/calling/',
+  type: 'zoom',
+  text: 'Me rejoindre sur Zoom',
+  link: '',
 } as const
 const DEFAULT_MOBILE_APP_LABEL = 'Application mobile'
 const DEFAULT_DISCLAIMER_LABEL = 'Clause de confidentialité'
@@ -314,16 +314,21 @@ function ensureDefaultVideoConference(signature: Signature) {
   videoConference.label = NEXT_DEFAULT_VIDEO_CONFERENCE.label
 
   const value = videoConference.value as AddonVideoConference
-  if (value.type === OLD_DEFAULT_VIDEO_CONFERENCE.type) {
+  const legacyType = value.type as AddonVideoConference['type'] | 'google-meet' | 'hangouts'
+  if (legacyType === OLD_DEFAULT_VIDEO_CONFERENCE.type || legacyType === 'google-meet') {
     value.type = NEXT_DEFAULT_VIDEO_CONFERENCE.type
   }
-  if (value.text === OLD_DEFAULT_VIDEO_CONFERENCE.text) {
+  if (
+    value.text === OLD_DEFAULT_VIDEO_CONFERENCE.text
+    || value.text === 'Me rejoindre sur Google Meet'
+  ) {
     value.text = NEXT_DEFAULT_VIDEO_CONFERENCE.text
   }
-  if (value.link === OLD_DEFAULT_VIDEO_CONFERENCE.link) {
-    value.link = NEXT_DEFAULT_VIDEO_CONFERENCE.link
-  }
-  if (value.link === 'https://meet.google.com/') {
+  if (
+    value.link === OLD_DEFAULT_VIDEO_CONFERENCE.link
+    || value.link === 'https://meet.google.com/'
+    || value.link === 'https://meet.google.com/calling/'
+  ) {
     value.link = NEXT_DEFAULT_VIDEO_CONFERENCE.link
   }
 }

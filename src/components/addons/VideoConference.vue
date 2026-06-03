@@ -6,7 +6,6 @@ import { buildVideoConferenceUrl } from '@/utils'
 const { getAddonValue, patchAddonValue } = useSignatures()
 
 const options: Array<{ label: string, value: VideoConference }> = [
-  { label: 'Google Meet', value: 'google-meet' },
   { label: 'Skype', value: 'skype' },
   { label: 'Zoom', value: 'zoom' },
 ]
@@ -18,20 +17,6 @@ const fieldOptions: Record<VideoConference, {
   placeholder: string
   text: string
 }> = {
-  'google-meet': {
-    text: 'Me rejoindre sur Google Meet',
-    link: 'https://meet.google.com/calling/',
-    inputLabel: 'Compte, téléphone ou lien Meet',
-    placeholder: 'prenom@acadenice.fr ou abc-defg-hij',
-    description: 'Google ne documente pas d’URL directe avec email. Si vous saisissez un contact, le bouton ouvre l’espace Appels Meet ; un lien Meet collé est conservé.',
-  },
-  hangouts: {
-    text: 'Me rejoindre sur Google Meet',
-    link: 'https://meet.google.com/calling/',
-    inputLabel: 'Compte, téléphone ou lien Meet',
-    placeholder: 'prenom@acadenice.fr ou abc-defg-hij',
-    description: 'Hangouts est remplacé par Google Meet. Le bouton ouvre l’espace Appels Meet ou le lien Meet collé.',
-  },
   skype: {
     text: 'M’appeler sur Skype',
     link: '',
@@ -51,16 +36,21 @@ const fieldOptions: Record<VideoConference, {
 const defaultTexts = new Set([
   ...Object.values(fieldOptions).map((option) => option.text),
   'Meet me on Google Hangouts',
+  'Me rejoindre sur Google Meet',
 ])
 
 const defaultLinks = new Set([
   ...Object.values(fieldOptions).map((option) => option.link),
   '',
   'https://meet.google.com/',
+  'https://meet.google.com/calling/',
 ])
 
 const type = computed({
-  get: () => getAddonValue<AddonVideoConference>('videoConference').type,
+  get: () => {
+    const current = getAddonValue<AddonVideoConference>('videoConference').type
+    return current === 'skype' || current === 'zoom' ? current : 'zoom'
+  },
   set: (value: VideoConference) => {
     const current = getAddonValue<AddonVideoConference>('videoConference')
     const next = fieldOptions[value]

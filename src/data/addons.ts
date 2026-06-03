@@ -47,9 +47,9 @@ export const addons: AddonTool[] = [
     type: 'videoConference',
     isNew: false,
     value: {
-      type: 'google-meet',
-      text: 'Me rejoindre sur Google Meet',
-      link: 'https://meet.google.com/calling/',
+      type: 'zoom',
+      text: 'Me rejoindre sur Zoom',
+      link: '',
     },
   },
   {

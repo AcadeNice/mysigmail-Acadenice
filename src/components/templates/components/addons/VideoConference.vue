@@ -16,8 +16,6 @@ defineProps<Props>()
 const { getAddonValue } = useSignatures()
 
 const COLORS = {
-  'google-meet': '#1A73E8',
-  hangouts: '#03B066',
   skype: '#00BEF8',
   zoom: '#259DFF',
 }
@@ -26,24 +24,26 @@ const COLORS = {
 const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
 
 const LOGOS = {
-  'google-meet': `${publicBase}/assets/icons/zoom.png`,
-  hangouts: `${publicBase}/assets/icons/hangouts.png`,
   skype: `${publicBase}/assets/icons/skype.png`,
   zoom: `${publicBase}/assets/icons/zoom.png`,
 }
 
 const videoConference = computed(() => getAddonValue<AddonVideoConference>('videoConference'))
+const videoConferenceType = computed(() => {
+  const type = videoConference.value.type
+  return type === 'skype' || type === 'zoom' ? type : 'zoom'
+})
 
-const logoUrl = computed(() => LOGOS[videoConference.value.type])
+const logoUrl = computed(() => LOGOS[videoConferenceType.value])
 const videoConferenceUrl = computed(() => (
-  buildVideoConferenceUrl(videoConference.value.type, videoConference.value.link)
+  buildVideoConferenceUrl(videoConferenceType.value, videoConference.value.link)
 ))
 
 const leftCellStyle = computed(() => {
   const style = {
     borderTopLeftRadius: '3px',
     borderBottomLeftRadius: '3px',
-    backgroundColor: COLORS[videoConference.value.type],
+    backgroundColor: COLORS[videoConferenceType.value],
     padding: '0 5px 0 0 !important',
   }
   return style
@@ -53,7 +53,7 @@ const rightCellStyle = computed(() => {
   const style = {
     borderTopRightRadius: '3px',
     borderBottomRightRadius: '3px',
-    backgroundColor: COLORS[videoConference.value.type],
+    backgroundColor: COLORS[videoConferenceType.value],
     padding: '0 9px 0 0 !important',
     color: '#fff',
   }
