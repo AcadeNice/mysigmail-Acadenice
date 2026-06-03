@@ -65,9 +65,7 @@ const valuePlaceholder = computed(() => {
   }
 
   if (placeholders[localValue.value.id ?? '']) return placeholders[localValue.value.id ?? '']
-  if (localValue.value.inlineWith && localValue.value.type === 'text') {
-    return 'Contactez-moi à partir de 14h'
-  }
+  if (localValue.value.inlineWith) return ''
   if (localValue.value.type === 'link') return 'https://exemple.com'
   if (localValue.value.type === 'email') return 'prenom.nom@exemple.fr'
   if (localValue.value.type === 'phone') return '04 00 00 00 00'
