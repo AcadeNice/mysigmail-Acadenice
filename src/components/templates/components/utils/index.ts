@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes } from 'vue'
 
 import type { BasicTool } from '@/composables/signatures/types'
 
-import { normalizeUrl } from '@/utils'
+import { normalizeTelHref, normalizeUrl } from '@/utils'
 
 export function getAnchorAttrs(
   tool: BasicTool,
@@ -28,7 +28,7 @@ export function getAnchorAttrs(
 
   if (tool.type === 'phone') {
     return {
-      href: `tel:${tool.value}`,
+      href: normalizeTelHref(tool.value),
       style: {
         color: textColor,
       },

@@ -5,7 +5,7 @@ export function clone<T>(obj: T): T {
 }
 
 export function normalizeUrl(link: string) {
-  const re = /^(?:https?:|skype:|tg:|whatsapp:|zoommtg:|zoomus:)/i
+  const re = /^(?:https?:|mailto:|tel:|skype:|tg:|whatsapp:|zoommtg:|zoomus:)/i
   let url
 
   if (re.test(link)) {
@@ -15,6 +15,20 @@ export function normalizeUrl(link: string) {
   }
 
   return url
+}
+
+export function normalizeTelHref(value: string) {
+  const compact = value.trim().replace(/[\s().-]/g, '')
+
+  if (/^0[1-9]\d{8}$/.test(compact)) {
+    return `tel:+33${compact.slice(1)}`
+  }
+
+  if (/^00\d+$/.test(compact)) {
+    return `tel:+${compact.slice(2)}`
+  }
+
+  return `tel:${compact}`
 }
 
 export function buildVideoConferenceUrl(type: VideoConference, rawLink: string) {
