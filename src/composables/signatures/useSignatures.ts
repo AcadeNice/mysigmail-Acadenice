@@ -53,6 +53,10 @@ function sameLabel(field: BasicTool, label: string) {
   return normalizeLabel(field.label) === normalizeLabel(label)
 }
 
+function normalizeColor(color: string | undefined) {
+  return color?.trim().toUpperCase()
+}
+
 function findField(basic: BasicTool[], id: string, label: string) {
   return basic.find((field) => field.id === id) ?? basic.find((field) => sameLabel(field, label))
 }
@@ -137,9 +141,26 @@ function ensureContactFields(signature: Signature) {
   moveAfter(basic, standard, mobile)
 }
 
+function ensureDefaultOptionColors(signature: Signature) {
+  const options = signature.tools.options
+  const oldDefault = '#4CCCB8'
+  const nextSecondary = '#FDA100'
+
+  if (
+    !options.secondaryColor
+    || (
+      normalizeColor(options.mainColor) === oldDefault
+      && normalizeColor(options.secondaryColor) === oldDefault
+    )
+  ) {
+    options.secondaryColor = nextSecondary
+  }
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
+  ensureDefaultOptionColors(signature)
 }
 
 const nameField = computed(() => {

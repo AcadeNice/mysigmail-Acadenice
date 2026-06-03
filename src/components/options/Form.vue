@@ -87,38 +87,38 @@ const jobSeparator = computed({
 
 <template>
   <div>
-    <h3>Color</h3>
+    <h3>Couleurs</h3>
     <UiFieldForm class="mb-4">
-      <UiFieldFormItem label="Main">
+      <UiFieldFormItem label="Couleur principale">
         <UiColorPicker v-model="mainColor" />
       </UiFieldFormItem>
       <UiFieldFormItem
         v-if="isSecondColorAvailable"
-        label="Secondary"
+        label="Couleur secondaire"
       >
         <UiColorPicker v-model="secondaryColor" />
       </UiFieldFormItem>
       <UiFieldFormItem
         v-if="isBgColorAvailable"
-        label="Background"
+        label="Arrière-plan"
       >
         <UiColorPicker v-model="bgColor" />
       </UiFieldFormItem>
       <UiFieldFormItem
         v-if="isBgColorAvailable"
-        label="Background text"
+        label="Texte sur arrière-plan"
       >
         <UiColorPicker v-model="bgTextColor" />
       </UiFieldFormItem>
     </UiFieldForm>
-    <h3>Photo / Logo</h3>
+    <h3>Photo / logo</h3>
     <UiFieldForm class="mb-4">
-      <UiFieldFormItem label="Show">
+      <UiFieldFormItem label="Afficher">
         <UiSwitch v-model="avatar" />
       </UiFieldFormItem>
       <UiFieldFormItem
-        label="Size"
-        :description="`Width in percentage. Current: ${avatarSize[0]}%`"
+        label="Taille"
+        :description="`Largeur en pourcentage. Actuel : ${avatarSize[0]}%`"
       >
         <div class="flex items-center h-5">
           <UiSlider
@@ -128,10 +128,10 @@ const jobSeparator = computed({
           />
         </div>
       </UiFieldFormItem>
-      <UiFieldFormItem label="Shape">
+      <UiFieldFormItem label="Forme">
         <UiSelect v-model="avatarShape">
           <UiSelectTrigger>
-            <UiSelectValue placeholder="Select a value" />
+            <UiSelectValue placeholder="Sélectionner une valeur" />
           </UiSelectTrigger>
           <UiSelectContent>
             <UiSelectGroup>
@@ -148,11 +148,11 @@ const jobSeparator = computed({
       </UiFieldFormItem>
     </UiFieldForm>
     <template v-if="isColumnSizeAvailable">
-      <h3>Column Size</h3>
+      <h3>Taille des colonnes</h3>
       <UiFieldForm class="mb-4">
         <UiFieldFormItem
-          label="Column 1"
-          :description="`Width in percentage. Current: ${column1Width[0]}%`"
+          label="Colonne 1"
+          :description="`Largeur en pourcentage. Actuel : ${column1Width[0]}%`"
         >
           <div class="flex items-center h-5">
             <UiSlider
@@ -164,12 +164,12 @@ const jobSeparator = computed({
         </UiFieldFormItem>
       </UiFieldForm>
     </template>
-    <h3>Font</h3>
+    <h3>Police</h3>
     <UiFieldForm class="mb-4">
-      <UiFieldFormItem label="Family">
+      <UiFieldFormItem label="Famille">
         <UiSelect v-model="fontFamily">
           <UiSelectTrigger>
-            <UiSelectValue placeholder="Select a value" />
+            <UiSelectValue placeholder="Sélectionner une valeur" />
           </UiSelectTrigger>
           <UiSelectContent>
             <UiSelectGroup
@@ -188,10 +188,10 @@ const jobSeparator = computed({
           </UiSelectContent>
         </UiSelect>
       </UiFieldFormItem>
-      <UiFieldFormItem label="Size">
+      <UiFieldFormItem label="Taille">
         <UiSelect v-model="fontSize">
           <UiSelectTrigger>
-            <UiSelectValue placeholder="Select a value" />
+            <UiSelectValue placeholder="Sélectionner une valeur" />
           </UiSelectTrigger>
           <UiSelectContent>
             <UiSelectGroup>
@@ -207,12 +207,12 @@ const jobSeparator = computed({
         </UiSelect>
       </UiFieldFormItem>
     </UiFieldForm>
-    <h3>Other</h3>
+    <h3>Autres</h3>
     <UiFieldForm class="mb-4">
-      <UiFieldFormItem label="Job separator">
+      <UiFieldFormItem label="Séparateur poste / entreprise">
         <UiSelect v-model="jobSeparator">
           <UiSelectTrigger>
-            <UiSelectValue placeholder="Select a value" />
+            <UiSelectValue placeholder="Sélectionner une valeur" />
           </UiSelectTrigger>
           <UiSelectContent>
             <UiSelectGroup>

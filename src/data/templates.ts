@@ -25,7 +25,7 @@ export function useTemplateData() {
   // Palette: azur/mediterranean blues + soft neutrals
   const BRAND = {
     main: '#4CCCB8', // primary azur
-    secondary: '#4CCCB8', // darker blue
+    secondary: '#FDA100', // AcadéNice orange
     bg: '#0F2F4A', // deep night blue
     textOnBg: '#FFFFFF',
     font: 'Inter, Segoe UI, Arial, Helvetica, sans-serif',
@@ -176,7 +176,7 @@ export function useTemplateData() {
         options: {
           ...DEFAULTS.options,
           mainColor: BRAND.bg,
-          secondaryColor: BRAND.bg,
+          secondaryColor: BRAND.secondary,
           bgColor: BRAND.bg,
           bgTextColor: BRAND.textOnBg,
           avatarSize: 74,

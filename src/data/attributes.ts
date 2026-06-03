@@ -3,20 +3,20 @@ export const attributes = {
     min: 50,
     max: 150,
     roundness: [
-      { label: 'Round', value: 'round' },
-      { label: 'Square', value: 'square' },
-      { label: 'Rounded corners', value: 'rounded-corner' },
+      { label: 'Rond', value: 'round' },
+      { label: 'Carré', value: 'square' },
+      { label: 'Coins arrondis', value: 'rounded-corner' },
     ],
   },
   font: {
     size: [
-      { label: 'Small', value: 11 },
-      { label: 'Medium', value: 12 },
-      { label: 'Large', value: 13 },
+      { label: 'Petite', value: 11 },
+      { label: 'Moyenne', value: 12 },
+      { label: 'Grande', value: 13 },
     ],
     family: [
       {
-        label: 'sans-serif',
+        label: 'Sans empattement',
         options: [
           { label: 'Arial', value: 'Arial, Helvetica, sans-serif' },
           { label: 'Comic Sans MS', value: '\'Comic Sans MS\', sans-serif' },
@@ -27,7 +27,7 @@ export const attributes = {
         ],
       },
       {
-        label: 'monospace',
+        label: 'Chasse fixe',
         options: [
           {
             label: 'Courier New',
@@ -45,8 +45,8 @@ export const attributes = {
     options: [
       { label: '/', value: '/' },
       { label: '|', value: '|' },
-      { label: 'at', value: 'at' },
-      { label: 'New line', value: 'br' },
+      { label: 'à', value: 'at' },
+      { label: 'Nouvelle ligne', value: 'br' },
     ],
   },
   types: [
