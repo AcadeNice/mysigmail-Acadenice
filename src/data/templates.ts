@@ -58,7 +58,14 @@ export function useTemplateData() {
         main: true,
         value: '04 23 50 02 70',
       },
-      { id: 'phone-standard', label: 'Poste', type: 'text', main: true, value: '10X' },
+      {
+        id: 'phone-standard',
+        inlineWith: 'phone-mobile',
+        label: 'Poste',
+        type: 'text',
+        main: true,
+        value: '10X',
+      },
       {
         id: 'appointment-link',
         label: 'Prendre rendez-vous',

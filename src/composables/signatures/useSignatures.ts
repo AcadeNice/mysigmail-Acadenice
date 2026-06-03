@@ -208,6 +208,8 @@ function ensureContactFields(signature: Signature) {
     standard.value = '10X'
   }
 
+  standard.inlineWith = mobile.id
+
   if (email && (!email.value || email.value === 'prenom.nom@acadenice.fr')) {
     email.value = 'prenom@acadenice.fr'
   }
