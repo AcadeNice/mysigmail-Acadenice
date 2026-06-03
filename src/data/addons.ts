@@ -69,8 +69,8 @@ export const addons: AddonTool[] = [
     type: 'logo',
     isNew: false,
     value: {
-      image: '',
-      link: '',
+      image: `${publicBase}/assets/logo-acadenice.png`,
+      link: 'https://acadenice.fr',
     },
   },
 ]

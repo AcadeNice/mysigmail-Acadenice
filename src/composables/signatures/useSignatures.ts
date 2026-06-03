@@ -16,6 +16,7 @@ import type {
   Addon,
   AddonBanner,
   AddonCTA,
+  AddonLogo,
   AddonTrackingPixel,
   AddonValue,
   AddonVideoConference,
@@ -57,6 +58,10 @@ const NEXT_DEFAULT_VIDEO_CONFERENCE = {
   text: 'Me rejoindre sur Google Meet',
   link: 'https://meet.google.com/',
 } as const
+const DEFAULT_LOGO = {
+  image: `${window.location.origin}/assets/logo-acadenice.png`,
+  link: 'https://acadenice.fr',
+}
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -280,6 +285,15 @@ function ensureDefaultVideoConference(signature: Signature) {
   }
 }
 
+function ensureDefaultLogo(signature: Signature) {
+  const logo = signature.tools.addons.find((addon) => addon.type === 'logo')
+  if (!logo || typeof logo.value !== 'object' || logo.value === null || Array.isArray(logo.value)) return
+
+  const value = logo.value as AddonLogo
+  if (!value.image) value.image = DEFAULT_LOGO.image
+  if (!value.link) value.link = DEFAULT_LOGO.link
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
@@ -288,6 +302,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureDefaultDisclaimer(signature)
   ensureDefaultCta(signature)
   ensureDefaultVideoConference(signature)
+  ensureDefaultLogo(signature)
 }
 
 const nameField = computed(() => {
