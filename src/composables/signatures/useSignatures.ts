@@ -198,9 +198,9 @@ function ensureContactFields(signature: Signature) {
     standard.value = '10X'
   }
 
-  moveAfter(basic, appointment, email)
-  moveAfter(basic, mobile, appointment)
+  moveAfter(basic, mobile, email)
   moveAfter(basic, standard, mobile)
+  moveAfter(basic, appointment, standard)
 }
 
 function ensureDefaultOptionColors(signature: Signature) {

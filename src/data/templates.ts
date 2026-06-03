@@ -52,13 +52,6 @@ export function useTemplateData() {
         value: 'prenom.nom@acadenice.fr',
       },
       {
-        id: 'appointment-link',
-        label: 'Prendre rendez-vous',
-        type: 'link',
-        main: true,
-        value: 'https://cal.acadenice.com/prénom/rdv',
-      },
-      {
         id: 'phone-mobile',
         label: 'Standard',
         type: 'phone',
@@ -66,6 +59,13 @@ export function useTemplateData() {
         value: '04 23 50 02 70',
       },
       { id: 'phone-standard', label: 'Poste', type: 'text', main: true, value: '10X' },
+      {
+        id: 'appointment-link',
+        label: 'Prendre rendez-vous',
+        type: 'link',
+        main: true,
+        value: 'https://cal.acadenice.com/prénom/rdv',
+      },
     ] as BasicTool[],
 
     options: {
