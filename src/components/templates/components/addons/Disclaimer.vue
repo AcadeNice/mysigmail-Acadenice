@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 
+import type { AddonDisclaimer } from '@/composables/signatures/types'
+
 import * as Base from '@/components/templates/components/base'
 
 interface Props {
@@ -11,18 +13,44 @@ defineProps<Props>()
 
 const { getAddonValue, options } = useSignatures()
 
-const disclaimer = computed(() => getAddonValue<string>('disclaimer'))
-const disclaimerLines = computed(() => disclaimer.value.split(/\r?\n/))
+const disclaimer = computed(() => {
+  const value = getAddonValue<AddonDisclaimer | string>('disclaimer')
+  if (typeof value === 'string') {
+    return {
+      text: value,
+      fontSize: options.value?.fontSize ?? 12,
+      fullWidth: false,
+    }
+  }
+
+  return {
+    text: value?.text ?? '',
+    fontSize: value?.fontSize ?? options.value?.fontSize ?? 12,
+    fullWidth: value?.fullWidth ?? false,
+  }
+})
+
+const displayText = computed(() => disclaimer.value.text.replace(/\s*\r?\n\s*/g, ' ').trim())
+const tableWidth = computed(() => (disclaimer.value.fullWidth ? '100%' : 'auto'))
+const cellStyle = computed(() => {
+  const style: HTMLAttributes['style'] = {
+    width: disclaimer.value.fullWidth ? '100%' : undefined,
+  }
+
+  return style
+})
 
 const computedStyle = computed(() => {
   const style: HTMLAttributes['style'] = {
     color: '#888',
+    fontSize: `${disclaimer.value.fontSize}px`,
+    lineHeight: `${Math.round(disclaimer.value.fontSize * 1.45)}px`,
+    margin: '0',
+    width: disclaimer.value.fullWidth ? '100%' : undefined,
   }
 
   if (options.value) {
-    style.fontSize = `${options.value.fontSize}px`
     style.fontFamily = options.value.fontFamily
-    style.lineHeight = '14pt'
   }
 
   return style
@@ -30,18 +58,12 @@ const computedStyle = computed(() => {
 </script>
 
 <template>
-  <Base.Table width="auto">
+  <Base.Table :width="tableWidth">
     <tr>
-      <td :style="tdStyle">
-        <p :style="computedStyle">
-          <template
-            v-for="(line, index) in disclaimerLines"
-            :key="`${index}-${line}`"
-          >
-            <br v-if="index > 0">
-            {{ line }}
-          </template>
-        </p>
+      <td :style="[tdStyle, cellStyle]">
+        <div :style="computedStyle">
+          {{ displayText }}
+        </div>
       </td>
     </tr>
   </Base.Table>

@@ -16,6 +16,7 @@ import type {
   Addon,
   AddonBanner,
   AddonCTA,
+  AddonDisclaimer,
   AddonLogo,
   AddonTrackingPixel,
   AddonValue,
@@ -241,10 +242,32 @@ function ensureDefaultSocials(signature: Signature) {
 
 function ensureDefaultDisclaimer(signature: Signature) {
   const disclaimer = signature.tools.addons.find((addon) => addon.type === 'disclaimer')
-  if (!disclaimer || typeof disclaimer.value !== 'string') return
+  if (!disclaimer) return
 
-  if (disclaimer.value.trim() === OLD_DEFAULT_DISCLAIMER) {
-    disclaimer.value = disclaimerPresets[0].value
+  if (typeof disclaimer.value === 'string') {
+    const text = disclaimer.value.trim() === OLD_DEFAULT_DISCLAIMER
+      ? disclaimerPresets[0].value
+      : disclaimer.value
+
+    disclaimer.value = {
+      text,
+      fontSize: 12,
+      fullWidth: false,
+    }
+    return
+  }
+
+  if (typeof disclaimer.value !== 'object' || disclaimer.value === null || Array.isArray(disclaimer.value)) return
+
+  const value = disclaimer.value as AddonDisclaimer
+  if (!value.text || value.text.trim() === OLD_DEFAULT_DISCLAIMER) {
+    value.text = disclaimerPresets[0].value
+  }
+  if (!value.fontSize) {
+    value.fontSize = 12
+  }
+  if (typeof value.fullWidth !== 'boolean') {
+    value.fullWidth = false
   }
 }
 

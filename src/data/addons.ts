@@ -28,7 +28,11 @@ export const addons: AddonTool[] = [
     label: 'Disclaimer',
     type: 'disclaimer',
     isNew: false,
-    value: disclaimerPresets[0].value,
+    value: {
+      text: disclaimerPresets[0].value,
+      fontSize: 12,
+      fullWidth: false,
+    },
   },
   {
     label: 'Banner',

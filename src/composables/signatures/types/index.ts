@@ -20,6 +20,12 @@ export interface AddonVideoConference {
   type: VideoConference
 }
 
+export interface AddonDisclaimer {
+  text: string
+  fontSize?: number
+  fullWidth?: boolean
+}
+
 export interface AddonCTA {
   colorBg: string
   colorText: string
@@ -37,6 +43,7 @@ export interface AddonTrackingPixel {
 export type AddonValue
   = | string
     | AddonBanner
+    | AddonDisclaimer
     | AddonMobileApp
     | AddonVideoConference
     | AddonCTA
