@@ -4,7 +4,7 @@ import type { AddonVideoConference } from '@/composables/signatures/types'
 const { getAddonValue, patchAddonValue } = useSignatures()
 
 const options = [
-  { label: 'Hangouts', value: 'hangouts' },
+  { label: 'Google Meet', value: 'google-meet' },
   { label: 'Skype', value: 'skype' },
   { label: 'Zoom', value: 'zoom' },
 ]
@@ -36,7 +36,7 @@ const link = computed({
     <UiFieldFormItem label="Type">
       <UiSelect v-model="type">
         <UiSelectTrigger>
-          <UiSelectValue placeholder="Select a type" />
+          <UiSelectValue placeholder="Sélectionner un type" />
         </UiSelectTrigger>
         <UiSelectContent>
           <UiSelectItem
@@ -49,10 +49,10 @@ const link = computed({
         </UiSelectContent>
       </UiSelect>
     </UiFieldFormItem>
-    <UiFieldFormItem label="Text">
+    <UiFieldFormItem label="Texte">
       <UiInput v-model="text" />
     </UiFieldFormItem>
-    <UiFieldFormItem label="Link">
+    <UiFieldFormItem label="Lien">
       <UiInput
         v-model="link"
         placeholder="https://"

@@ -41,13 +41,13 @@ export const addons: AddonTool[] = [
     },
   },
   {
-    label: 'Video Conference',
+    label: 'Vidéoconférence',
     type: 'videoConference',
     isNew: false,
     value: {
-      type: 'hangouts',
-      text: 'Meet me on Google Hangouts',
-      link: '',
+      type: 'google-meet',
+      text: 'Me rejoindre sur Google Meet',
+      link: 'https://meet.google.com/',
     },
   },
   {

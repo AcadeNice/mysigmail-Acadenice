@@ -16,6 +16,7 @@ defineProps<Props>()
 const { getAddonValue } = useSignatures()
 
 const COLORS = {
+  'google-meet': '#1A73E8',
   hangouts: '#03B066',
   skype: '#00BEF8',
   zoom: '#259DFF',
@@ -25,6 +26,7 @@ const COLORS = {
 const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
 
 const LOGOS = {
+  'google-meet': `${publicBase}/assets/icons/google-meet.png`,
   hangouts: `${publicBase}/assets/icons/hangouts.png`,
   skype: `${publicBase}/assets/icons/skype.png`,
   zoom: `${publicBase}/assets/icons/zoom.png`,

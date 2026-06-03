@@ -18,6 +18,7 @@ import type {
   AddonCTA,
   AddonTrackingPixel,
   AddonValue,
+  AddonVideoConference,
   BasicTool,
   Signature,
   Social,
@@ -45,6 +46,17 @@ const NEXT_DEFAULT_CTA = {
   link: 'https://acadenice.fr',
   colorBg: '#FDA100',
 }
+const OLD_DEFAULT_VIDEO_CONFERENCE = {
+  type: 'hangouts',
+  text: 'Meet me on Google Hangouts',
+  link: '',
+} as const
+const NEXT_DEFAULT_VIDEO_CONFERENCE = {
+  label: 'Vidéoconférence',
+  type: 'google-meet',
+  text: 'Me rejoindre sur Google Meet',
+  link: 'https://meet.google.com/',
+} as const
 
 /** ========= reactive base ========= */
 const selectedId = ref<string>()
@@ -245,6 +257,29 @@ function ensureDefaultCta(signature: Signature) {
   }
 }
 
+function ensureDefaultVideoConference(signature: Signature) {
+  const videoConference = signature.tools.addons.find((addon) => addon.type === 'videoConference')
+  if (
+    !videoConference
+    || typeof videoConference.value !== 'object'
+    || videoConference.value === null
+    || Array.isArray(videoConference.value)
+  ) return
+
+  videoConference.label = NEXT_DEFAULT_VIDEO_CONFERENCE.label
+
+  const value = videoConference.value as AddonVideoConference
+  if (value.type === OLD_DEFAULT_VIDEO_CONFERENCE.type) {
+    value.type = NEXT_DEFAULT_VIDEO_CONFERENCE.type
+  }
+  if (value.text === OLD_DEFAULT_VIDEO_CONFERENCE.text) {
+    value.text = NEXT_DEFAULT_VIDEO_CONFERENCE.text
+  }
+  if (value.link === OLD_DEFAULT_VIDEO_CONFERENCE.link) {
+    value.link = NEXT_DEFAULT_VIDEO_CONFERENCE.link
+  }
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
@@ -252,6 +287,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureDefaultSocials(signature)
   ensureDefaultDisclaimer(signature)
   ensureDefaultCta(signature)
+  ensureDefaultVideoConference(signature)
 }
 
 const nameField = computed(() => {
