@@ -20,7 +20,7 @@ const routes = [
     alias: [], // no alias "/"
     component: () => import('@/views/Basic.vue'),
     meta: {
-      title: 'Détails de signature de base',
+      title: 'Infos',
     },
   },
 

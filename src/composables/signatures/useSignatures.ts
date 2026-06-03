@@ -63,13 +63,18 @@ function ensureCoreFieldIds(signature: Signature) {
     { id: 'full-name', label: 'Nom complet' },
     { id: 'job-title', label: 'Intitulé du poste' },
     { id: 'organization', label: 'Entreprise' },
-    { id: 'website-link', label: 'Website' },
+    { id: 'website-link', label: 'Site web', aliases: ['Website'] },
     { id: 'email-address', label: 'Email' },
   ]
 
-  coreFields.forEach(({ id, label }) => {
-    const field = findField(basic, id, label)
-    if (field) field.id = id
+  coreFields.forEach(({ id, label, aliases = [] }) => {
+    const field = findField(basic, id, label) ?? aliases.map((alias) => findField(basic, '', alias)).find(Boolean)
+    if (!field) return
+
+    field.id = id
+    if (aliases.some((alias) => sameLabel(field, alias))) {
+      field.label = label
+    }
   })
 }
 

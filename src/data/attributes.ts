@@ -50,9 +50,9 @@ export const attributes = {
     ],
   },
   types: [
-    { label: 'Text', value: 'text' },
-    { label: 'Email', value: 'email' },
-    { label: 'Phone', value: 'phone' },
-    { label: 'Link', value: 'link' },
+    { label: 'Texte', value: 'text' },
+    { label: 'E-mail', value: 'email' },
+    { label: 'Téléphone', value: 'phone' },
+    { label: 'Lien', value: 'link' },
   ],
 }

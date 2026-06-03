@@ -17,14 +17,36 @@ function isSameTool(a: BasicTool, b: BasicTool) {
   return a.id === b.id && a.label === b.label && a.type === b.type && a.value === b.value
 }
 
-const contentLabel = computed(() => {
-  if (localValue.value.type === 'link') return 'URL du lien'
-  if (localValue.value.type === 'email') return 'Adresse e-mail'
-  if (localValue.value.type === 'phone') return 'Numéro de téléphone'
-  return 'Texte affiché'
+const fallbackLabel = computed(() => {
+  const labels: Record<string, string> = {
+    'full-name': 'Nom complet',
+    'job-title': 'Intitulé du poste',
+    organization: 'Entreprise',
+    'website-link': 'Site web',
+    'email-address': 'Email',
+    'appointment-link': 'Prendre RDV',
+    'phone-mobile': 'Portable',
+    'phone-standard': 'Standard',
+  }
+
+  return labels[localValue.value.id ?? ''] ?? 'Champ personnalisé'
 })
 
-const contentPlaceholder = computed(() => {
+const fieldLabel = computed(() => localValue.value.label || fallbackLabel.value)
+
+const valuePlaceholder = computed(() => {
+  const placeholders: Record<string, string> = {
+    'full-name': 'Prénom Nom',
+    'job-title': 'Intitulé du poste',
+    organization: 'Entreprise',
+    'website-link': 'https://exemple.com',
+    'email-address': 'prenom.nom@exemple.fr',
+    'appointment-link': 'https://cal.exemple.com/votre-lien',
+    'phone-mobile': '06 00 00 00 00',
+    'phone-standard': '04 00 00 00 00',
+  }
+
+  if (placeholders[localValue.value.id ?? '']) return placeholders[localValue.value.id ?? '']
   if (localValue.value.type === 'link') return 'https://exemple.com'
   if (localValue.value.type === 'email') return 'prenom.nom@exemple.fr'
   if (localValue.value.type === 'phone') return '04 00 00 00 00'
@@ -89,7 +111,7 @@ watch(localValue, (v) => update(v), { deep: true })
         <UiFieldFormLabel>
           <div class="flex items-center justify-between w-full">
             <div class="grow">
-              Libellé
+              {{ fieldLabel }}
             </div>
             <div class="flex items-center">
               <UiPopover>
@@ -107,9 +129,15 @@ watch(localValue, (v) => update(v), { deep: true })
                 <UiPopoverContent>
                   <UiFieldForm
                     label-position="top"
-                    class="space-y-0"
+                    class="space-y-3"
                   >
-                    <UiFieldFormItem label="Type">
+                    <UiFieldFormItem label="Libellé">
+                      <UiInput
+                        v-model="localValue.label"
+                        placeholder="Facultatif"
+                      />
+                    </UiFieldFormItem>
+                    <UiFieldFormItem label="Type de champ">
                       <UiSelect v-model="localValue.type">
                         <UiSelectTrigger class="w-full">
                           <UiSelectValue placeholder="Sélectionner un type" />
@@ -127,27 +155,25 @@ watch(localValue, (v) => update(v), { deep: true })
                         </UiSelectContent>
                       </UiSelect>
                     </UiFieldFormItem>
+                    <UiButton
+                      v-if="!localValue.main"
+                      variant="destructive"
+                      size="sm"
+                      class="w-full"
+                      @click="onRemoveField"
+                    >
+                      Supprimer le champ
+                    </UiButton>
                   </UiFieldForm>
                 </UiPopoverContent>
               </UiPopover>
-              <UiButton
-                v-if="!localValue.main"
-                variant="ghost"
-                size="icon-xs"
-                @click="onRemoveField"
-              >
-                <UilTrashAlt class="text-destructive" />
-              </UiButton>
             </div>
           </div>
         </UiFieldFormLabel>
       </template>
-      <UiInput v-model="localValue.label" />
-    </UiFieldFormItem>
-    <UiFieldFormItem :label="contentLabel">
       <UiInput
         v-model="localValue.value"
-        :placeholder="contentPlaceholder"
+        :placeholder="valuePlaceholder"
       />
     </UiFieldFormItem>
   </UiFieldForm>

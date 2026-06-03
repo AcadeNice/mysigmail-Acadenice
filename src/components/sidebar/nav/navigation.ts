@@ -12,7 +12,7 @@ import UilUserCircle from '~icons/uil/user-circle'
 
 export const main = [
   {
-    name: 'Basic',
+    name: 'Infos',
     path: '/basic',
     icon: UilUserCircle,
   },
