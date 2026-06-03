@@ -57,7 +57,7 @@ const NEXT_DEFAULT_VIDEO_CONFERENCE = {
   label: 'Vidéoconférence',
   type: 'google-meet',
   text: 'Me rejoindre sur Google Meet',
-  link: 'https://meet.google.com/',
+  link: 'https://meet.google.com/calling/',
 } as const
 const DEFAULT_LOGO = {
   image: `${window.location.origin}/assets/logo-acadenice.png`,
@@ -106,7 +106,7 @@ function ensureCoreFieldIds(signature: Signature) {
     { id: 'email-address', label: 'Email' },
   ]
 
-  coreFields.forEach(({ id, label, aliases = [] }) => {
+  coreFields.forEach(({ aliases = [], id, label }) => {
     const field = findField(basic, id, label) ?? aliases.map((alias) => findField(basic, '', alias)).find(Boolean)
     if (!field) return
 
@@ -292,7 +292,8 @@ function ensureDefaultVideoConference(signature: Signature) {
     || typeof videoConference.value !== 'object'
     || videoConference.value === null
     || Array.isArray(videoConference.value)
-  ) return
+  ) { return
+  }
 
   videoConference.label = NEXT_DEFAULT_VIDEO_CONFERENCE.label
 
@@ -304,6 +305,9 @@ function ensureDefaultVideoConference(signature: Signature) {
     value.text = NEXT_DEFAULT_VIDEO_CONFERENCE.text
   }
   if (value.link === OLD_DEFAULT_VIDEO_CONFERENCE.link) {
+    value.link = NEXT_DEFAULT_VIDEO_CONFERENCE.link
+  }
+  if (value.link === 'https://meet.google.com/') {
     value.link = NEXT_DEFAULT_VIDEO_CONFERENCE.link
   }
 }

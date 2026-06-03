@@ -51,7 +51,7 @@ export const addons: AddonTool[] = [
     value: {
       type: 'google-meet',
       text: 'Me rejoindre sur Google Meet',
-      link: 'https://meet.google.com/',
+      link: 'https://meet.google.com/calling/',
     },
   },
   {

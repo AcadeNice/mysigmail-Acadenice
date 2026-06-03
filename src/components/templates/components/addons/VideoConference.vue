@@ -4,7 +4,7 @@ import type { HTMLAttributes } from 'vue'
 import type { AddonVideoConference } from '@/composables/signatures/types'
 
 import * as Base from '@/components/templates/components/base'
-import { normalizeUrl } from '@/utils'
+import { buildVideoConferenceUrl } from '@/utils'
 
 interface Props {
   tdStyle?: HTMLAttributes['style']
@@ -35,6 +35,9 @@ const LOGOS = {
 const videoConference = computed(() => getAddonValue<AddonVideoConference>('videoConference'))
 
 const logoUrl = computed(() => LOGOS[videoConference.value.type])
+const videoConferenceUrl = computed(() => (
+  buildVideoConferenceUrl(videoConference.value.type, videoConference.value.link)
+))
 
 const leftCellStyle = computed(() => {
   const style = {
@@ -62,7 +65,7 @@ const rightCellStyle = computed(() => {
   <Base.Table width="auto">
     <tr>
       <td :style="tdStyle">
-        <Base.Link :href="normalizeUrl(videoConference.link)">
+        <Base.Link :href="videoConferenceUrl">
           <Base.Table width="auto">
             <tr>
               <td
