@@ -347,7 +347,7 @@ function markTouched(field: 'name' | 'email' | 'phone') {
             <UiInput
               v-model="emailInput"
               type="email"
-              placeholder="prenom.nom@acadenice.fr"
+              placeholder="prenom@acadenice.fr"
               :disabled="loadingRole || saving"
               :maxlength="MAX_LENGTH"
               :aria-invalid="!!emailError"

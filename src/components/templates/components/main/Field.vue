@@ -66,7 +66,7 @@ const inlineFields = computed(() => inlineFieldsFor(props.model))
           style="padding-right: 0px; font-weight: 600"
           v-bind="$attrs"
           :style="{ color: labelColor }"
-        >{{ model.label }}:&nbsp;&nbsp;</span>
+        >{{ model.label }}&nbsp;:&nbsp;&nbsp;</span>
 
         <Base.Link
           v-if="model.type !== 'text'"
@@ -91,7 +91,7 @@ const inlineFields = computed(() => inlineFieldsFor(props.model))
             style="padding-right: 0px; font-weight: 600"
             v-bind="$attrs"
             :style="{ color: labelColor }"
-          >{{ inlineField.label }}:&nbsp;&nbsp;</span>
+          >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
           <Base.Link
             v-if="inlineField.type !== 'text'"
             v-bind="getAnchorAttrs(inlineField, textColor)"

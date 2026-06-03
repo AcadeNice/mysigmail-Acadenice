@@ -109,7 +109,7 @@ function ensureCoreFieldIds(signature: Signature) {
     { id: 'full-name', label: 'Nom complet' },
     { id: 'job-title', label: 'Intitulé du poste' },
     { id: 'organization', label: 'Entreprise' },
-    { id: 'website-link', label: 'Site web', aliases: ['Website'] },
+    { id: 'website-link', label: 'Site', aliases: ['Site web', 'Website'] },
     { id: 'email-address', label: 'Email' },
   ]
 
@@ -204,6 +204,10 @@ function ensureContactFields(signature: Signature) {
 
   if (!standard.value) {
     standard.value = '10X'
+  }
+
+  if (email && (!email.value || email.value === 'prenom.nom@acadenice.fr')) {
+    email.value = 'prenom@acadenice.fr'
   }
 
   moveAfter(basic, mobile, email)

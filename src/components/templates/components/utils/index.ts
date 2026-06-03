@@ -37,7 +37,7 @@ export function getAnchorAttrs(
 }
 
 export function usesLabelAsLinkText(tool: BasicTool) {
-  return tool.type === 'link'
+  return tool.type === 'link' && tool.id !== 'website-link'
 }
 
 function normalizeLabel(label: string) {

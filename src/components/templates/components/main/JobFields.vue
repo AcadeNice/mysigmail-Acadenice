@@ -54,7 +54,7 @@ const { inlineFieldsFor } = useSignatures()
               style="padding-right: 0px; font-weight: 600"
               v-bind="$attrs"
               :style="{ color: labelColor }"
-            >{{ i.label }}:&nbsp;&nbsp;</span>
+            >{{ i.label }}&nbsp;:&nbsp;&nbsp;</span>
             <Base.Link
               v-if="i.type !== 'text'"
               v-bind="getAnchorAttrs(i, textColor)"
@@ -78,7 +78,7 @@ const { inlineFieldsFor } = useSignatures()
                 style="padding-right: 0px; font-weight: 600"
                 v-bind="$attrs"
                 :style="{ color: labelColor }"
-              >{{ inlineField.label }}:&nbsp;&nbsp;</span>
+              >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
               <Base.Link
                 v-if="inlineField.type !== 'text'"
                 v-bind="getAnchorAttrs(inlineField, textColor)"
@@ -105,7 +105,7 @@ const { inlineFieldsFor } = useSignatures()
             style="padding-right: 0px; font-weight: 600"
             v-bind="$attrs"
             :style="{ color: labelColor }"
-          >{{ i.label }}:&nbsp;&nbsp;</span>
+          >{{ i.label }}&nbsp;:&nbsp;&nbsp;</span>
           <Base.Link
             v-if="i.type !== 'text'"
             v-bind="getAnchorAttrs(i, textColor)"
@@ -129,7 +129,7 @@ const { inlineFieldsFor } = useSignatures()
               style="padding-right: 0px; font-weight: 600"
               v-bind="$attrs"
               :style="{ color: labelColor }"
-            >{{ inlineField.label }}:&nbsp;&nbsp;</span>
+            >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
             <Base.Link
               v-if="inlineField.type !== 'text'"
               v-bind="getAnchorAttrs(inlineField, textColor)"

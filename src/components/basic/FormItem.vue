@@ -27,7 +27,7 @@ const defaultLabels: Record<string, string> = {
   'full-name': 'Nom complet',
   'job-title': 'Intitulé du poste',
   organization: 'Entreprise',
-  'website-link': 'Site web',
+  'website-link': 'Site',
   'email-address': 'Email',
   'appointment-link': 'Prendre rendez-vous',
   'phone-mobile': 'Standard',
@@ -58,7 +58,7 @@ const valuePlaceholder = computed(() => {
     'job-title': 'Intitulé du poste',
     organization: 'Entreprise',
     'website-link': 'https://exemple.com',
-    'email-address': 'prenom.nom@exemple.fr',
+    'email-address': 'prenom@exemple.fr',
     'appointment-link': 'https://cal.acadenice.com/prénom/rdv',
     'phone-mobile': '04 23 50 02 70',
     'phone-standard': '10X',
@@ -67,7 +67,7 @@ const valuePlaceholder = computed(() => {
   if (placeholders[localValue.value.id ?? '']) return placeholders[localValue.value.id ?? '']
   if (localValue.value.inlineWith) return ''
   if (localValue.value.type === 'link') return 'https://exemple.com'
-  if (localValue.value.type === 'email') return 'prenom.nom@exemple.fr'
+  if (localValue.value.type === 'email') return 'prenom@exemple.fr'
   if (localValue.value.type === 'phone') return '04 00 00 00 00'
   return ''
 })

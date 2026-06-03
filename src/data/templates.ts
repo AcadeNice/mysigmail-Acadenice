@@ -43,13 +43,13 @@ export function useTemplateData() {
         value: 'Enseignant',
       },
       { id: 'organization', label: 'Entreprise', type: 'text', main: true, value: 'AcadéNice' },
-      { id: 'website-link', label: 'Site web', type: 'link', main: true, value: 'https://acadenice.fr' },
+      { id: 'website-link', label: 'Site', type: 'link', main: true, value: 'https://acadenice.fr' },
       {
         id: 'email-address',
         label: 'Email',
         type: 'email',
         main: true,
-        value: 'prenom.nom@acadenice.fr',
+        value: 'prenom@acadenice.fr',
       },
       {
         id: 'phone-mobile',
