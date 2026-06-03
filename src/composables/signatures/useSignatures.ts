@@ -19,6 +19,7 @@ import type {
   BasicTool,
   Signature,
   Social,
+  SocialTool,
 } from './types'
 
 const { sonner } = useSonner()
@@ -187,13 +188,22 @@ function ensureDefaultOptionColors(signature: Signature) {
 }
 
 function ensureDefaultSocials(signature: Signature) {
-  const exists = signature.tools.socials.some((social) => social.icon === 'tiktok')
-  if (exists) return
+  const requiredSocials: SocialTool[] = [
+    {
+      icon: 'tiktok',
+      label: 'TikTok',
+      value: 'https://www.tiktok.com/@acadenice',
+    },
+    {
+      icon: 'youtube',
+      label: 'YouTube',
+      value: 'https://www.youtube.com/@AcadéNice',
+    },
+  ]
 
-  signature.tools.socials.push({
-    icon: 'tiktok',
-    label: 'TikTok',
-    value: 'https://www.tiktok.com/@acadenice',
+  requiredSocials.forEach((requiredSocial) => {
+    const exists = signature.tools.socials.some((social) => social.icon === requiredSocial.icon)
+    if (!exists) signature.tools.socials.push(requiredSocial)
   })
 }
 
