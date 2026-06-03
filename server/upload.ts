@@ -9,9 +9,49 @@ import process from 'node:process'
 const uploadDir = path.join(process.cwd(), 'uploads')
 fs.mkdirSync(uploadDir, { recursive: true })
 
-// public/assets for banner
-const publicAssetsDir = path.join(process.cwd(), 'public', 'assets')
+const BANNER_FILENAME = 'acadenice-banniere.png'
+const HIDDEN_BANNER_FILENAME = 'acadenice-banniere-hide.png'
+const TRANSPARENT_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=',
+  'base64',
+)
+
+// public/assets for banner. In Docker, Apache serves /assets from /var/www/html/assets.
+const publicAssetsDir = process.env.PUBLIC_ASSETS_DIR
+  || (fs.existsSync('/var/www/html/assets')
+    ? '/var/www/html/assets'
+    : path.join(process.cwd(), 'public', 'assets'))
 fs.mkdirSync(publicAssetsDir, { recursive: true })
+
+function bannerPath() {
+  return path.join(publicAssetsDir, BANNER_FILENAME)
+}
+
+function hiddenBannerPath() {
+  return path.join(publicAssetsDir, HIDDEN_BANNER_FILENAME)
+}
+
+function isTransparentPixelFile(filePath: string) {
+  try {
+    return fs.existsSync(filePath) && fs.readFileSync(filePath).equals(TRANSPARENT_PIXEL_PNG)
+  } catch {
+    return false
+  }
+}
+
+function readBannerInfo() {
+  const p = bannerPath()
+  const backup = hiddenBannerPath()
+  const exists = fs.existsSync(p)
+  const stat = exists ? fs.statSync(p) : null
+
+  return {
+    exists,
+    hidden: fs.existsSync(backup) || isTransparentPixelFile(p),
+    mtime: stat?.mtimeMs ?? 0,
+    path: `/assets/${BANNER_FILENAME}`,
+  }
+}
 
 function sanitizeBase(input: string) {
   if (!input) return ''
@@ -108,20 +148,10 @@ export function makeProtectedUploadRoutes(requireUser: any) {
   })
 
   router.get('/api/banner-info', (_req, res) => {
-    const p = path.join(publicAssetsDir, 'acadenice-banniere.png')
     try {
-      if (!fs.existsSync(p)) {
-        return res.json({ exists: false })
-      }
-
-      const stat = fs.statSync(p)
-      return res.json({
-        exists: true,
-        path: '/assets/acadenice-banniere.png',
-        mtime: stat.mtimeMs,
-      })
+      return res.json(readBannerInfo())
     } catch {
-      return res.json({ exists: false })
+      return res.json({ exists: false, hidden: false, mtime: 0, path: `/assets/${BANNER_FILENAME}` })
     }
   })
 
@@ -135,15 +165,17 @@ export function makeProtectedUploadRoutes(requireUser: any) {
           return res.status(400).json({ error: 'No file or unsupported type (PNG only)' })
         }
 
-        const target = path.join(publicAssetsDir, 'acadenice-banniere.png')
-        // rewriting file
+        const target = bannerPath()
+        const hidden = hiddenBannerPath()
+        if (fs.existsSync(hidden)) {
+          fs.rmSync(hidden)
+        }
+
         fs.writeFileSync(target, req.file.buffer)
-        const stat = fs.statSync(target)
 
         return res.json({
           ok: true,
-          path: '/assets/acadenice-banniere.png',
-          mtime: stat.mtimeMs,
+          ...readBannerInfo(),
         })
       } catch (e: any) {
         console.error('banner-upload error:', e)
@@ -151,6 +183,35 @@ export function makeProtectedUploadRoutes(requireUser: any) {
       }
     },
   )
+
+  router.post('/api/banner-visibility', requireUser, (req: Request, res: Response) => {
+    try {
+      const hidden = Boolean(req.body?.hidden)
+      const target = bannerPath()
+      const backup = hiddenBannerPath()
+
+      if (hidden) {
+        if (!fs.existsSync(backup) && fs.existsSync(target)) {
+          fs.renameSync(target, backup)
+        }
+
+        fs.writeFileSync(target, TRANSPARENT_PIXEL_PNG)
+      } else if (fs.existsSync(backup)) {
+        if (fs.existsSync(target)) {
+          fs.rmSync(target)
+        }
+        fs.renameSync(backup, target)
+      }
+
+      return res.json({
+        ok: true,
+        ...readBannerInfo(),
+      })
+    } catch (e: any) {
+      console.error('banner-visibility error:', e)
+      return res.status(500).json({ error: e?.message || 'Internal error' })
+    }
+  })
 
   return router
 }
