@@ -155,7 +155,6 @@ watch(localValue, (v) => update(v), { deep: true })
     label-position="top"
     class="space-y-2"
   >
-    <hr class="mx-auto mb-3 w-4/5 border-border/80">
     <UiFieldFormItem>
       <template #label>
         <UiFieldFormLabel>
