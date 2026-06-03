@@ -44,6 +44,7 @@ const fontSize = computed(() => props.font?.fontSize || '12px')
         display: inline-block;
         font-size: 0;
         line-height: 0;
+        padding: 5px 0;
         vertical-align: middle;
         white-space: nowrap;
       "
