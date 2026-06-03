@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nanoid } from 'nanoid'
+
 import { attributes } from '@/data/attributes'
 import { clone } from '@/utils'
 
@@ -14,25 +16,41 @@ const { installed } = useSignatures()
 const localValue = ref(clone<BasicTool>(props.value))
 
 function isSameTool(a: BasicTool, b: BasicTool) {
-  return a.id === b.id && a.label === b.label && a.type === b.type && a.value === b.value
+  return a.id === b.id
+    && a.inlineWith === b.inlineWith
+    && a.label === b.label
+    && a.type === b.type
+    && a.value === b.value
+}
+
+const defaultLabels: Record<string, string> = {
+  'full-name': 'Nom complet',
+  'job-title': 'Intitulé du poste',
+  organization: 'Entreprise',
+  'website-link': 'Site web',
+  'email-address': 'Email',
+  'appointment-link': 'Prendre RDV',
+  'phone-mobile': 'Portable',
+  'phone-standard': 'Standard',
 }
 
 const fallbackLabel = computed(() => {
-  const labels: Record<string, string> = {
-    'full-name': 'Nom complet',
-    'job-title': 'Intitulé du poste',
-    organization: 'Entreprise',
-    'website-link': 'Site web',
-    'email-address': 'Email',
-    'appointment-link': 'Prendre RDV',
-    'phone-mobile': 'Portable',
-    'phone-standard': 'Standard',
-  }
-
-  return labels[localValue.value.id ?? ''] ?? 'Champ personnalisé'
+  if (localValue.value.inlineWith) return 'Texte complémentaire'
+  return defaultLabels[localValue.value.id ?? ''] ?? 'Champ personnalisé'
 })
 
 const fieldLabel = computed(() => localValue.value.label || fallbackLabel.value)
+const labelOverride = computed({
+  get: () => {
+    const defaultLabel = defaultLabels[localValue.value.id ?? '']
+    if (defaultLabel && localValue.value.label === defaultLabel) return ''
+    return localValue.value.label
+  },
+  set: (value: string) => {
+    const defaultLabel = defaultLabels[localValue.value.id ?? '']
+    localValue.value.label = value || defaultLabel || ''
+  },
+})
 
 const valuePlaceholder = computed(() => {
   const placeholders: Record<string, string> = {
@@ -47,6 +65,9 @@ const valuePlaceholder = computed(() => {
   }
 
   if (placeholders[localValue.value.id ?? '']) return placeholders[localValue.value.id ?? '']
+  if (localValue.value.inlineWith && localValue.value.type === 'text') {
+    return 'Contactez-moi à partir de 14h'
+  }
   if (localValue.value.type === 'link') return 'https://exemple.com'
   if (localValue.value.type === 'email') return 'prenom.nom@exemple.fr'
   if (localValue.value.type === 'phone') return '04 00 00 00 00'
@@ -72,10 +93,12 @@ function findInstalledIndex(tool: BasicTool) {
 function update(tool: BasicTool) {
   if (!installed.value) return
 
-  const { label, type, value } = tool
+  const { id, inlineWith, label, type, value } = tool
   const index = findInstalledIndex(tool)
   if (index < 0) return
 
+  installed.value.tools.basic[index].id = id
+  installed.value.tools.basic[index].inlineWith = inlineWith
   installed.value.tools.basic[index].label = label
   installed.value.tools.basic[index].type = type
   installed.value.tools.basic[index].value = value
@@ -86,7 +109,36 @@ function onRemoveField() {
   const index = findInstalledIndex(localValue.value)
   if (index < 0) return
 
+  const removedId = localValue.value.id
   installed.value.tools.basic.splice(index, 1)
+
+  if (removedId) {
+    installed.value.tools.basic = installed.value.tools.basic.filter(
+      (field) => field.inlineWith !== removedId,
+    )
+  }
+}
+
+function onAddInlineField() {
+  if (!installed.value) return
+
+  const index = findInstalledIndex(localValue.value)
+  if (index < 0) return
+
+  if (!localValue.value.id) {
+    localValue.value.id = nanoid(8)
+    update(localValue.value)
+  }
+
+  const parentId = localValue.value.inlineWith || localValue.value.id
+  installed.value.tools.basic.splice(index + 1, 0, {
+    id: nanoid(8),
+    inlineWith: parentId,
+    label: '',
+    main: false,
+    type: 'text',
+    value: '',
+  })
 }
 
 watch(
@@ -133,8 +185,8 @@ watch(localValue, (v) => update(v), { deep: true })
                   >
                     <UiFieldFormItem label="Libellé">
                       <UiInput
-                        v-model="localValue.label"
-                        placeholder="Facultatif"
+                        v-model="labelOverride"
+                        placeholder="facultatif"
                       />
                     </UiFieldFormItem>
                     <UiFieldFormItem label="Type de champ">
@@ -155,6 +207,14 @@ watch(localValue, (v) => update(v), { deep: true })
                         </UiSelectContent>
                       </UiSelect>
                     </UiFieldFormItem>
+                    <UiButton
+                      variant="secondary"
+                      size="sm"
+                      class="w-full"
+                      @click="onAddInlineField"
+                    >
+                      Ajouter un champ sur la même ligne
+                    </UiButton>
                     <UiButton
                       v-if="!localValue.main"
                       variant="destructive"

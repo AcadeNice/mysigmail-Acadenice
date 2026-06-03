@@ -112,6 +112,7 @@ export interface AddonTool {
 
 export interface BasicTool {
   id?: string
+  inlineWith?: string
   label: string
   main: boolean
   type: Basic

@@ -63,7 +63,7 @@ export function shouldShowFieldLabel(tool: BasicTool, showLabel: boolean) {
 
 export function getFieldDisplayValue(tool: BasicTool) {
   if (usesLabelAsLinkText(tool)) {
-    return tool.label
+    return tool.label || tool.value
   }
 
   return tool.value

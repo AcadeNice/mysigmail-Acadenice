@@ -27,6 +27,8 @@ withDefaults(defineProps<Props>(), {
   showLabel: true,
   textColor: '#000',
 })
+
+const { inlineFieldsFor } = useSignatures()
 </script>
 
 <template>
@@ -66,6 +68,29 @@ withDefaults(defineProps<Props>(), {
             >{{
               i.value
             }}</span>
+            <template
+              v-for="inlineField in inlineFieldsFor(i)"
+              :key="inlineField.id"
+            >
+              <span style="padding: 0 0px">&nbsp;&nbsp;</span>
+              <span
+                v-if="shouldShowFieldLabel(inlineField, true)"
+                style="padding-right: 0px; font-weight: 600"
+                v-bind="$attrs"
+                :style="{ color: labelColor }"
+              >{{ inlineField.label }}:&nbsp;&nbsp;</span>
+              <Base.Link
+                v-if="inlineField.type !== 'text'"
+                v-bind="getAnchorAttrs(inlineField, textColor)"
+              >
+                {{ getFieldDisplayValue(inlineField) }}
+              </Base.Link>
+              <span
+                v-if="inlineField.type === 'text'"
+                :style="{ color: textColor }"
+                v-bind="$attrs"
+              >{{ inlineField.value }}</span>
+            </template>
           </span>
         </p>
       </template>
@@ -94,6 +119,29 @@ withDefaults(defineProps<Props>(), {
           >{{
             i.value
           }}</span>
+          <template
+            v-for="inlineField in inlineFieldsFor(i)"
+            :key="inlineField.id"
+          >
+            <span style="padding: 0 0px">&nbsp;&nbsp;</span>
+            <span
+              v-if="shouldShowFieldLabel(inlineField, true)"
+              style="padding-right: 0px; font-weight: 600"
+              v-bind="$attrs"
+              :style="{ color: labelColor }"
+            >{{ inlineField.label }}:&nbsp;&nbsp;</span>
+            <Base.Link
+              v-if="inlineField.type !== 'text'"
+              v-bind="getAnchorAttrs(inlineField, textColor)"
+            >
+              {{ getFieldDisplayValue(inlineField) }}
+            </Base.Link>
+            <span
+              v-if="inlineField.type === 'text'"
+              :style="{ color: textColor }"
+              v-bind="$attrs"
+            >{{ inlineField.value }}</span>
+          </template>
         </p>
       </template>
     </td>

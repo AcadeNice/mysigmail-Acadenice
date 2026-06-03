@@ -36,6 +36,7 @@ const installed = ref<Signature>(templates[0])
 
 /** ========= basic ========= */
 const mainFields = computed(() => installed.value.tools.basic.filter((i) => i.type !== 'image'))
+const signatureMainFields = computed(() => mainFields.value.filter((i) => !i.inlineWith))
 const isMainFieldsEmpty = computed(() => mainFields.value.every((i) => !i.value))
 const imageField = computed(() => installed.value.tools.basic.find((i) => i.type === 'image')?.value ?? '')
 const defaultMainFields = computed(() => templates[0].tools.basic.filter((i) => i.type !== 'image'))
@@ -143,18 +144,23 @@ function ensureSignatureFields(signature: Signature) {
 
 const nameField = computed(() => {
   if (isMainFieldsEmpty.value) return defaultMainFields.value[0]
-  return mainFields.value[0]
+  return signatureMainFields.value[0]
 })
 
 const jobFields = computed(() => {
   if (isMainFieldsEmpty.value) return defaultMainFields.value.slice(1, 3)
-  return mainFields.value.slice(1, 3)
+  return signatureMainFields.value.slice(1, 3)
 })
 
 const otherFields = computed(() => {
   if (isMainFieldsEmpty.value) return defaultMainFields.value.slice(3)
-  return mainFields.value.slice(3)
+  return signatureMainFields.value.slice(3)
 })
+
+function inlineFieldsFor(field: BasicTool) {
+  if (!field.id) return []
+  return mainFields.value.filter((i) => i.inlineWith === field.id && i.value)
+}
 
 const options = computed(() => installed.value.tools.options)
 
@@ -409,6 +415,7 @@ export function useSignatures() {
     getAddonValue,
     getSocialValue,
     imageField,
+    inlineFieldsFor,
     init,
     installed,
     isAddonsEmpty,
