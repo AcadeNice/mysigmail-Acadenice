@@ -79,30 +79,34 @@ const { inlineFieldsFor } = useSignatures()
               v-for="inlineField in inlineFieldsFor(i)"
               :key="inlineField.id"
             >
-              <span style="padding: 0 0px">&nbsp;&nbsp;</span>
               <span
-                v-if="shouldShowFieldLabel(inlineField, true)"
-                style="padding-right: 0px; font-weight: 600"
-                v-bind="$attrs"
-                :style="{ color: labelColor }"
-              >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
-              <AppointmentButton
-                v-if="isAppointmentLink(inlineField)"
-                :model="inlineField"
-                :font="font"
-                :text-color="textColor"
-              />
-              <Base.Link
-                v-else-if="inlineField.type !== 'text'"
-                v-bind="getAnchorAttrs(inlineField, textColor)"
+                style="display: inline-block; white-space: nowrap; vertical-align: baseline"
               >
-                {{ getFieldDisplayValue(inlineField) }}
-              </Base.Link>
-              <span
-                v-if="inlineField.type === 'text'"
-                :style="{ color: textColor }"
-                v-bind="$attrs"
-              >{{ inlineField.value }}</span>
+                <span style="padding: 0 0px">&nbsp;&nbsp;</span>
+                <span
+                  v-if="shouldShowFieldLabel(inlineField, true)"
+                  style="padding-right: 0px; font-weight: 600"
+                  v-bind="$attrs"
+                  :style="{ color: labelColor }"
+                >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
+                <AppointmentButton
+                  v-if="isAppointmentLink(inlineField)"
+                  :model="inlineField"
+                  :font="font"
+                  :text-color="textColor"
+                />
+                <Base.Link
+                  v-else-if="inlineField.type !== 'text'"
+                  v-bind="getAnchorAttrs(inlineField, textColor)"
+                >
+                  {{ getFieldDisplayValue(inlineField) }}
+                </Base.Link>
+                <span
+                  v-if="inlineField.type === 'text'"
+                  :style="{ color: textColor }"
+                  v-bind="$attrs"
+                >{{ inlineField.value }}</span>
+              </span>
             </template>
           </span>
         </p>
@@ -142,30 +146,34 @@ const { inlineFieldsFor } = useSignatures()
             v-for="inlineField in inlineFieldsFor(i)"
             :key="inlineField.id"
           >
-            <span style="padding: 0 0px">&nbsp;&nbsp;</span>
             <span
-              v-if="shouldShowFieldLabel(inlineField, true)"
-              style="padding-right: 0px; font-weight: 600"
-              v-bind="$attrs"
-              :style="{ color: labelColor }"
-            >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
-            <AppointmentButton
-              v-if="isAppointmentLink(inlineField)"
-              :model="inlineField"
-              :font="font"
-              :text-color="textColor"
-            />
-            <Base.Link
-              v-else-if="inlineField.type !== 'text'"
-              v-bind="getAnchorAttrs(inlineField, textColor)"
+              style="display: inline-block; white-space: nowrap; vertical-align: baseline"
             >
-              {{ getFieldDisplayValue(inlineField) }}
-            </Base.Link>
-            <span
-              v-if="inlineField.type === 'text'"
-              :style="{ color: textColor }"
-              v-bind="$attrs"
-            >{{ inlineField.value }}</span>
+              <span style="padding: 0 0px">&nbsp;&nbsp;</span>
+              <span
+                v-if="shouldShowFieldLabel(inlineField, true)"
+                style="padding-right: 0px; font-weight: 600"
+                v-bind="$attrs"
+                :style="{ color: labelColor }"
+              >{{ inlineField.label }}&nbsp;:&nbsp;&nbsp;</span>
+              <AppointmentButton
+                v-if="isAppointmentLink(inlineField)"
+                :model="inlineField"
+                :font="font"
+                :text-color="textColor"
+              />
+              <Base.Link
+                v-else-if="inlineField.type !== 'text'"
+                v-bind="getAnchorAttrs(inlineField, textColor)"
+              >
+                {{ getFieldDisplayValue(inlineField) }}
+              </Base.Link>
+              <span
+                v-if="inlineField.type === 'text'"
+                :style="{ color: textColor }"
+                v-bind="$attrs"
+              >{{ inlineField.value }}</span>
+            </span>
           </template>
         </p>
       </template>

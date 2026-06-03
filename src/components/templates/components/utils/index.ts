@@ -31,6 +31,7 @@ export function getAnchorAttrs(
       href: normalizeTelHref(tool.value),
       style: {
         color: textColor,
+        whiteSpace: 'nowrap',
       },
     }
   }
@@ -68,6 +69,10 @@ export function shouldShowFieldLabel(tool: BasicTool, showLabel: boolean) {
 export function getFieldDisplayValue(tool: BasicTool) {
   if (usesLabelAsLinkText(tool)) {
     return tool.label || tool.value
+  }
+
+  if (tool.type === 'phone') {
+    return tool.value.replace(/\s/g, '\u00A0')
   }
 
   return tool.value
