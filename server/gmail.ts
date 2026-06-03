@@ -99,12 +99,27 @@ function deleteGmailTokens(email: string) {
 }
 
 /* ====================== helpers ====================== */
-const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || process.env.FRONT_ORIGIN || 'https://sign.acadenice.com' // fallback for prod
+const PUBLIC_ORIGIN = (process.env.PUBLIC_ORIGIN || process.env.FRONT_ORIGIN || 'https://sign.acadenice.com').replace(/\/$/, '') // fallback for prod
+const PRESERVED_HREF_SCHEME_RE = /^(?:mailto:|tel:|skype:|tg:|whatsapp:|zoommtg:|zoomus:)/i
 
-function absolutifySignatureHtml(html: string): string {
+export function absolutifySignatureHtml(html: string): string {
   if (!PUBLIC_ORIGIN) return html
 
   return html.replace(/(src|href)=["']([^"']+)["']/gi, (full, attr, url) => {
+    if (attr.toLowerCase() === 'href') {
+      const originPrefix = `${PUBLIC_ORIGIN}/`
+      if (url.startsWith(originPrefix)) {
+        const localUrl = url.slice(originPrefix.length)
+        if (PRESERVED_HREF_SCHEME_RE.test(localUrl)) {
+          return `${attr}="${localUrl}"`
+        }
+      }
+
+      if (PRESERVED_HREF_SCHEME_RE.test(url)) {
+        return full
+      }
+    }
+
     // уже абсолютный URL или data/cid — не трогаем
     if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('cid:')) {
       return full
