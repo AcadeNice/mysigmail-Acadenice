@@ -81,7 +81,7 @@ export function useTemplateData() {
       bgColor: BRAND.bg,
       bgTextColor: BRAND.textOnBg,
       avatar: true,
-      avatarSize: 158,
+      avatarSize: 155,
       avatarShape: 'rounded-corner',
       fontFamily: BRAND.font,
       fontSize: 12,

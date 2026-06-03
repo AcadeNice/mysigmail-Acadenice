@@ -1,7 +1,7 @@
 {
   "name": "mysigmail",
   "type": "module",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "private": true,
   "description": "An open-source email signature generator for Gmail, Outlook, Apple Mail, etc.",
   "author": {
