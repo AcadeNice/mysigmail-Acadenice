@@ -32,7 +32,6 @@ const anchorAttrs = computed<AnchorHTMLAttributes>(() => {
 })
 
 const label = computed(() => getFieldDisplayValue(props.model))
-const mainColor = computed(() => options.value?.mainColor || '#4CCCB8')
 const secondaryColor = computed(() => options.value?.secondaryColor || '#FDA100')
 const fontFamily = computed(() => props.font?.fontFamily || 'Arial, Helvetica, sans-serif')
 const fontSize = computed(() => props.font?.fontSize || '12px')
@@ -58,7 +57,7 @@ const fontSize = computed(() => props.font?.fontSize || '12px')
           vertical-align: middle;
           border-radius: 3px 0 0 3px;
         "
-        :style="{ backgroundColor: mainColor }"
+        :style="{ backgroundColor: secondaryColor }"
       >
         <img
           :src="calendarIcon"
