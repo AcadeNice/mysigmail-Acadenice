@@ -186,10 +186,22 @@ function ensureDefaultOptionColors(signature: Signature) {
   }
 }
 
+function ensureDefaultSocials(signature: Signature) {
+  const exists = signature.tools.socials.some((social) => social.icon === 'tiktok')
+  if (exists) return
+
+  signature.tools.socials.push({
+    icon: 'tiktok',
+    label: 'TikTok',
+    value: 'https://www.tiktok.com/@acadenice',
+  })
+}
+
 function ensureSignatureFields(signature: Signature) {
   ensureCoreFieldIds(signature)
   ensureContactFields(signature)
   ensureDefaultOptionColors(signature)
+  ensureDefaultSocials(signature)
 }
 
 const nameField = computed(() => {

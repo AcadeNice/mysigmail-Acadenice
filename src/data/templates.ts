@@ -98,6 +98,7 @@ export function useTemplateData() {
       { icon: 'twitter', value: 'https://x.com/acadenice', label: 'Twitter' },
       { icon: 'linkedin', value: 'https://linkedin.com/school/acadenice', label: 'LinkedIn' },
       { icon: 'instagram', value: 'https://instagram.com/acadenice', label: 'Instagram' },
+      { icon: 'tiktok', value: 'https://www.tiktok.com/@acadenice', label: 'TikTok' },
     ] as SocialTool[],
   }
 
