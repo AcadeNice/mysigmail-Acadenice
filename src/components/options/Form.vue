@@ -118,7 +118,7 @@ const jobSeparator = computed({
       </UiFieldFormItem>
       <UiFieldFormItem
         label="Taille"
-        :description="`Largeur en pourcentage. Actuel : ${avatarSize[0]}%`"
+        :description="`Largeur en pixels. Actuel : ${avatarSize[0]}px`"
       >
         <div class="flex items-center h-5">
           <UiSlider
