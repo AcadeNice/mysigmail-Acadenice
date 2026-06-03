@@ -26,7 +26,7 @@ const COLORS = {
 const publicBase = import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin
 
 const LOGOS = {
-  'google-meet': `${publicBase}/assets/icons/google-meet.png`,
+  'google-meet': `${publicBase}/assets/icons/zoom.png`,
   hangouts: `${publicBase}/assets/icons/hangouts.png`,
   skype: `${publicBase}/assets/icons/skype.png`,
   zoom: `${publicBase}/assets/icons/zoom.png`,
