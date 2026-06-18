@@ -66,11 +66,11 @@ function applyGuestPrefill(payload: GuestPrefill) {
 
 // reading sessionStorage, after we built /basic
 onMounted(() => {
-  if (isUser.value) return // only for guests
-  // filling the form if data lost (with data saved before)
   if (!isInit.value) {
     init()
   }
+  if (isUser.value) return // guest prefill only
+  // filling the form if data lost (with data saved before)
   try {
     const raw = sessionStorage.getItem(GUEST_PREFILL_KEY)
     if (!raw) return

@@ -85,7 +85,7 @@ export function useTemplateData() {
       avatarShape: 'rounded-corner',
       fontFamily: BRAND.font,
       fontSize: 12,
-      jobSeparator: '/',
+      jobSeparator: '|',
     } as OptionsTool,
 
     addons: [
@@ -220,7 +220,7 @@ export function useTemplateData() {
           bgTextColor: BRAND.textOnBg,
           avatarSize: 68,
           avatarShape: 'round',
-          jobSeparator: '/',
+          jobSeparator: '|',
         },
         addons: addonsForRole,
         socials: DEFAULTS.socials,

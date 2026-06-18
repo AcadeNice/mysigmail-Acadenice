@@ -70,6 +70,8 @@ const DEFAULT_BANNER = {
   image: `${window.location.origin}/assets/acadenice-banniere.png`,
   link: 'https://acadenice.fr',
 }
+const DEFAULT_JOB_SEPARATOR = '|'
+const OLD_DEFAULT_JOB_SEPARATOR = '/'
 const OLD_DEFAULT_AVATAR_SIZES = [112, 158]
 const NEXT_DEFAULT_AVATAR_SIZE = 155
 
@@ -248,6 +250,13 @@ function ensureDefaultAvatarSize(signature: Signature) {
   }
 }
 
+function ensureDefaultJobSeparator(signature: Signature) {
+  const options = signature.tools.options
+  if (!options.jobSeparator || options.jobSeparator === OLD_DEFAULT_JOB_SEPARATOR) {
+    options.jobSeparator = DEFAULT_JOB_SEPARATOR
+  }
+}
+
 function ensureDefaultSocials(signature: Signature) {
   signature.tools.socials = signature.tools.socials.filter((social) => {
     const normalizedValue = social.value
@@ -355,7 +364,25 @@ function ensureDefaultVideoConference(signature: Signature) {
 }
 
 function ensureDefaultBanner(signature: Signature) {
-  const banner = signature.tools.addons.find((addon) => addon.type === 'banner')
+  if (!isUser.value) {
+    signature.tools.addons = signature.tools.addons.filter((addon) => addon.type !== 'banner')
+    return
+  }
+
+  let banner = signature.tools.addons.find((addon) => addon.type === 'banner')
+  if (!banner) {
+    banner = {
+      label: DEFAULT_BANNER.label,
+      type: 'banner',
+      isNew: false,
+      value: {
+        image: DEFAULT_BANNER.image,
+        link: DEFAULT_BANNER.link,
+      },
+    }
+    signature.tools.addons.push(banner)
+  }
+
   if (!banner || typeof banner.value !== 'object' || banner.value === null || Array.isArray(banner.value)) return
 
   banner.label = DEFAULT_BANNER.label
@@ -387,6 +414,7 @@ function ensureSignatureFields(signature: Signature) {
   ensureContactFields(signature)
   ensureDefaultOptionColors(signature)
   ensureDefaultAvatarSize(signature)
+  ensureDefaultJobSeparator(signature)
   ensureDefaultSocials(signature)
   ensureDefaultDisclaimer(signature)
   ensureDefaultCta(signature)
@@ -617,6 +645,12 @@ function init() {
 
 watch(installed, () => (unsavedSignatureStore.value = JSON.stringify(installed.value)), {
   deep: true,
+})
+
+watch(isUser, () => {
+  if (!isInit.value) return
+  installed.value = stripBannerIfGuest(installed.value)
+  ensureSignatureFields(installed.value)
 })
 
 /** ========= guest banner ========= */
