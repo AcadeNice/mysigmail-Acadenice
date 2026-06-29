@@ -301,7 +301,7 @@ async function disconnectSite() {
         @click="addToGmail"
       >
         <UilGoogle class="mr-1 w-4 h-4" />
-        {{ loadingGmail ? 'Gmail…' : 'Add to Gmail' }}
+        {{ loadingGmail ? 'Gmail…' : 'Ajouter à Gmail' }}
       </UiButton>
 
       <!-- Add to EspoCRM -->
@@ -312,7 +312,7 @@ async function disconnectSite() {
         @click="addToEspo"
       >
         <Database class="mr-1 w-4 h-4" />
-        {{ loadingEspo ? 'EspoCRM…' : 'Ajouter à EspoCRM' }}
+        {{ loadingEspo ? 'CRM…' : 'Ajouter au CRM' }}
       </UiButton>
 
       <!-- Déconnecter Google -->
@@ -328,20 +328,20 @@ async function disconnectSite() {
       <UiDropdownMenu>
         <UiDropdownMenuTrigger as-child>
           <UiButton variant="outline">
-            Get Signature
+            Récupérer la signature
             <UilAngleDown class="ml-1 -mr-1 opacity-50 w-5 h-5" />
           </UiButton>
         </UiDropdownMenuTrigger>
-        <UiDropdownMenuContent class="w-32">
+        <UiDropdownMenuContent class="w-52">
           <UiDropdownMenuItem @click="onCopySelect">
-            Copy as Select
+            Copier la signature
           </UiDropdownMenuItem>
           <UiDropdownMenuItem @click="onCopyHTML">
-            Copy as HTML
+            Copier le code HTML
           </UiDropdownMenuItem>
           <UiDropdownMenuSeparator />
           <UiDropdownMenuItem @click="onDownload">
-            Download JSON
+            Télécharger le JSON
           </UiDropdownMenuItem>
         </UiDropdownMenuContent>
       </UiDropdownMenu>
