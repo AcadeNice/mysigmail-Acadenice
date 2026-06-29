@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Database } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import UilAngleDown from '~icons/uil/angle-down'
 import UilExclamationTriangle from '~icons/uil/exclamation-triangle'
@@ -17,6 +18,7 @@ const { sonner } = useSonner()
 const disconnectingSite = ref(false)
 const inputRef = ref<HTMLInputElement>()
 const loadingGmail = ref(false)
+const loadingEspo = ref(false)
 const disconnectingGmail = ref(false)
 // connected to Google? (checking for valid creds)
 const gmailConnected = ref(false)
@@ -53,10 +55,17 @@ onMounted(async () => {
   }
 })
 
+function getSignatureHtml() {
+  const el = document.querySelector('[data-slot="signature"]') as HTMLElement | null
+  if (!el) return ''
+
+  return el.outerHTML.replace(/<!--v-if-->/g, '')
+}
+
 // sending Gmail signature
 async function addToGmail() {
-  const el = document.querySelector('[data-slot="signature"]') as HTMLElement | null
-  if (!el) {
+  const html = getSignatureHtml()
+  if (!html) {
     sonner({
       title: 'Oops!',
       type: 'error',
@@ -64,8 +73,6 @@ async function addToGmail() {
     })
     return
   }
-
-  const html = el.outerHTML.replace(/<!--v-if-->/g, '')
 
   loadingGmail.value = true
   try {
@@ -108,6 +115,67 @@ async function addToGmail() {
     })
   } finally {
     loadingGmail.value = false
+  }
+}
+
+async function addToEspo() {
+  const html = getSignatureHtml()
+  if (!html) {
+    sonner({
+      title: 'Oops!',
+      type: 'error',
+      description: 'Aucune signature à synchroniser.',
+    })
+    return
+  }
+
+  loadingEspo.value = true
+  try {
+    const res = await fetch('/api/espo/signature', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html }),
+    })
+
+    let data: any = null
+    try {
+      data = await res.json()
+    } catch {
+      data = null
+    }
+
+    if (res.status === 401 && (data?.error === 'google_auth_required' || !data)) {
+      window.location.href = '/api/gmail/auth'
+      return
+    }
+
+    if (!res.ok) {
+      if (data?.error === 'espo_user_not_found') {
+        throw new Error('Aucun utilisateur EspoCRM ne correspond au compte Google connecté.')
+      }
+      if (data?.error === 'espo_preferences_forbidden') {
+        throw new Error('EspoCRM refuse la modification des préférences pour cet utilisateur.')
+      }
+      if (data?.error === 'espo_not_configured') {
+        throw new Error('La connexion EspoCRM n’est pas configurée côté serveur.')
+      }
+      throw new Error(data?.message || data?.error || 'Erreur lors de la synchronisation EspoCRM.')
+    }
+
+    sonner({
+      title: 'Succès',
+      type: 'success',
+      description: 'Signature synchronisée avec succès avec EspoCRM.',
+    })
+  } catch (e: any) {
+    sonner({
+      title: 'Erreur',
+      type: 'error',
+      description: e?.message || 'Erreur de synchronisation EspoCRM.',
+    })
+  } finally {
+    loadingEspo.value = false
   }
 }
 
@@ -231,6 +299,17 @@ async function disconnectSite() {
         <UilGoogle class="mr-1 w-4 h-4" />
         {{ loadingGmail ? 'Gmail…' : 'Add to Gmail' }}
       </UiButton>
+
+      <!-- Add to EspoCRM -->
+      <UiButton
+        variant="outline"
+        :disabled="loadingEspo"
+        @click="addToEspo"
+      >
+        <Database class="mr-1 w-4 h-4" />
+        {{ loadingEspo ? 'EspoCRM…' : 'Ajouter à EspoCRM' }}
+      </UiButton>
+
       <!-- Déconnecter Google -->
       <UiButton
         v-if="gmailConnected"

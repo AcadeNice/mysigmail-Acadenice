@@ -11,6 +11,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import { EMAIL_REGEX, FR_PHONE_REGEX } from '../src/utils/validators'
+import { makeEspoRouter } from './espo'
 import gmailRouter from './gmail'
 import trackingRouter from './tracking'
 import { makeProtectedUploadRoutes } from './upload'
@@ -353,6 +354,9 @@ app.use('/', trackingRouter)
 
 // Gmail integration router (OAuth + signature updates)
 app.use('/', gmailRouter)
+
+// EspoCRM integration router (signature update)
+app.use('/', makeEspoRouter(requireUser))
 
 /* ====================== Error handler & server start ====================== */
 
