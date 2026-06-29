@@ -6,9 +6,11 @@ import UilExclamationTriangle from '~icons/uil/exclamation-triangle'
 import UilGoogle from '~icons/uil/google'
 
 import { useSignatures } from '@/composables/signatures/useSignatures'
+import { useAccess } from '@/composables/useAccess'
 import { useCopySignature } from '@/composables/useCopySignature'
 import { useSonner } from '@/composables/useSonner'
 
+const { isUser } = useAccess()
 // copy / size of HTML
 const { isHtmlLarge, onCopyHTML, onCopySelect } = useCopySignature()
 // JSON (import/export of signature)
@@ -119,6 +121,8 @@ async function addToGmail() {
 }
 
 async function addToEspo() {
+  if (!isUser.value) return
+
   const html = getSignatureHtml()
   if (!html) {
     sonner({
@@ -302,6 +306,7 @@ async function disconnectSite() {
 
       <!-- Add to EspoCRM -->
       <UiButton
+        v-if="isUser"
         variant="outline"
         :disabled="loadingEspo"
         @click="addToEspo"
