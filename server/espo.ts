@@ -136,11 +136,14 @@ export function makeEspoRouter(requireUser: any) {
 
       html = absolutifySignatureHtml(html)
 
-      const user = await findEspoUserByEmail(gmailEmail)
-      await espoRequest(`Preferences/${encodeURIComponent(user.id)}`, {
-        method: 'PUT',
-        body: JSON.stringify({ signature: html }),
+      const data = await espoRequest('SignaturePreferences/action/updateSignature', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: gmailEmail,
+          signature: html,
+        }),
       })
+      const user = data?.user || await findEspoUserByEmail(gmailEmail)
 
       return res.json({
         ok: true,
